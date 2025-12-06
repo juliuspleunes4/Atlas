@@ -163,17 +163,22 @@ Write-Host @"
 
 Available configurations:
 
-1. SMALL  (~124M params, ~6-8GB VRAM)
-   - Fastest training
+1. TINY    (~40M params, ~4-6GB VRAM)
+   - Very fast training
+   - Low memory usage
+   - Good for testing/debugging
+
+2. SMALL  (~124M params, ~6-8GB VRAM)
+   - Fast training
    - Good for quick experiments
    - Decent quality
 
-2. DEFAULT (~350M params, ~12-14GB VRAM) [RECOMMENDED]
+3. DEFAULT (~350M params, ~12-14GB VRAM) [RECOMMENDED]
    - Balanced performance
    - Good quality
    - Safe memory margin
 
-3. LARGE  (~500M params, ~14-15GB VRAM)
+4. LARGE  (~500M params, ~14-15GB VRAM)
    - Best quality
    - Slowest training
    - Close to 16GB VRAM limit
@@ -181,13 +186,14 @@ Available configurations:
 "@ -ForegroundColor White
 
 do {
-    $choice = Read-Host "Choose configuration (1/2/3)"
-} while ($choice -notin @("1", "2", "3"))
+    $choice = Read-Host "Choose configuration (1/2/3/4)"
+} while ($choice -notin @("1", "2", "3", "4"))
 
 $configFile = switch ($choice) {
-    "1" { "configs/small.yaml"; $configName = "SMALL" }
-    "2" { "configs/default.yaml"; $configName = "DEFAULT" }
-    "3" { "configs/large.yaml"; $configName = "LARGE" }
+    "1" { "configs/tiny.yaml"; $configName = "TINY" }
+    "2" { "configs/small.yaml"; $configName = "SMALL" }
+    "3" { "configs/default.yaml"; $configName = "DEFAULT" }
+    "4" { "configs/large.yaml"; $configName = "LARGE" }
 }
 
 Write-Success "Selected: $configName configuration"

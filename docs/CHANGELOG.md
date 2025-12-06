@@ -4,8 +4,18 @@ All notable changes to Atlas will be documented in this file.
 
 ---
 
-## 2025-12-06 - Fix DataLoader Batch Format for Training
+## 2025-12-06 - Add Lightweight Training Config and Fix Batch Format
 
+- **New TINY configuration** (`configs/tiny.yaml`):
+  - Ultra-lightweight model: ~40M parameters
+  - Memory usage: 4-6GB VRAM (perfect for low-end GPUs or testing)
+  - Shorter sequences (512 tokens) and smaller batches (4)
+  - 8 layers, 512 hidden size, 8 attention heads
+  - Fast training for quick iteration and debugging
+- **Updated training pipeline** (`scripts/start_training.ps1`):
+  - Added TINY option to GPU configuration menu (option 1)
+  - Now offers 4 presets: TINY, SMALL, DEFAULT, LARGE
+  - Users can choose based on available GPU memory
 - **Fixed batch collation** (`atlas/data/loader.py`):
   - `collate_batch()` now returns dictionary with `'input_ids'` key instead of plain tensor
   - Matches expected format in `Trainer.train_step()` which accesses `batch['input_ids']`
@@ -13,10 +23,11 @@ All notable changes to Atlas will be documented in this file.
 - **Updated tests** (`tests/test_data.py`):
   - Fixed 6 data loader tests to expect dictionary structure
   - Updated assertions to check `batch['input_ids']` instead of direct tensor access
-  - All 72 data tests passing
+  - All 292 tests passing ✅
 - **Training now fully functional**:
   - Complete pipeline from data loading through training loop works correctly
   - Model, tokenizer, data loading, and training all integrated properly
+  - Multiple GPU memory profiles available for different hardware
 
 ## 2025-12-06 - Complete Training Pipeline and GPU-Optimized Configs
 

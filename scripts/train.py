@@ -487,7 +487,7 @@ def main():
             tokens_processed = len(train_dataset) * config['model']['max_seq_len']
             tokens_per_sec = tokens_processed / epoch_time
             
-            logger.info(f"\n{'─'*80}")
+            logger.info(f"\n{'-'*80}")
             logger.info(f"Epoch {epoch} Summary:")
             logger.info(f"  Train loss: {train_stats['loss']:.4f}")
             logger.info(f"  Train perplexity: {train_stats['perplexity']:.2f}")
@@ -501,11 +501,11 @@ def main():
                 memory_allocated = torch.cuda.memory_allocated() / 1024**3
                 memory_reserved = torch.cuda.memory_reserved() / 1024**3
                 logger.info(f"  GPU memory: {memory_allocated:.2f}GB allocated, {memory_reserved:.2f}GB reserved")
-            logger.info(f"{'─'*80}")
+            logger.info(f"{'-'*80}")
             
             # Evaluate on validation set
             if val_loader and (trainer.global_step % args.eval_interval == 0 or interrupted):
-                logger.info(f"\n{'─'*80}")
+                logger.info(f"\n{'-'*80}")
                 logger.info("Running validation...")
                 val_start = time.time()
                 val_stats = trainer.evaluate(val_loader, show_progress=False)
@@ -523,14 +523,14 @@ def main():
                 else:
                     is_best = False
                 logger.info(f"  Best val loss so far: {best_val_loss:.4f}")
-                logger.info(f"{'─'*80}")
+                logger.info(f"{'-'*80}")
             else:
                 val_stats = None
                 is_best = False
             
             # Save checkpoint
             if trainer.global_step % args.save_interval == 0 or interrupted:
-                logger.info(f"\n{'─'*80}")
+                logger.info(f"\n{'-'*80}")
                 logger.info("Saving checkpoint...")
                 metadata = CheckpointMetadata(
                     step=trainer.global_step,
@@ -548,10 +548,10 @@ def main():
                     scheduler=scheduler,
                     is_best=is_best,
                 )
-                logger.info(f"  ✓ Checkpoint saved: {checkpoint_path}")
+                logger.info(f"  [SAVED] Checkpoint: {checkpoint_path}")
                 if is_best:
-                    logger.info(f"  ✓ Best model saved")
-                logger.info(f"{'─'*80}")
+                    logger.info(f"  [BEST] Best model saved")
+                logger.info(f"{'-'*80}")
             
             # Check if interrupted
             if interrupted:
