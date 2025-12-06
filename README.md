@@ -147,138 +147,101 @@ pip install -e .
 pytest tests/ -v
 ```
 
-## 🎯 Quick Start
+## 🎯 Quick Start (Recommended)
 
-### 🎬 For Absolute Beginners
+**The easiest way to get started - fully automated and interactive!**
 
-1. **Clone the repository**
-   ```bash
-   git clone https://github.com/juliuspleunes4/Atlas.git
-   cd Atlas
-   ```
-
-2. **Download training data**: Get the Wikipedia SimpleEnglish dataset from [Kaggle](https://www.kaggle.com/datasets/ffatty/plaintext-wikipedia-simpleenglish)
-
-3. **Place the zip file** in `data/raw/archive.zip`
-
-4. **Run the training pipeline**:
-   ```powershell
-   # Windows
-   .\scripts\run_pipeline.ps1
-   
-   # Linux/Mac
-   chmod +x scripts/run_pipeline.sh
-   ./scripts/run_pipeline.sh
-   ```
-
-That's it! The script handles everything else automatically.
-
----
-
-### 📦 Manual Data Preparation (Optional)
-
-If you prefer manual control:
-
-1. **Download Wikipedia SimpleEnglish dataset** from [Kaggle](https://www.kaggle.com/datasets/ffatty/plaintext-wikipedia-simpleenglish)
-
-2. **Place the zip file** in `data/raw/`:
-   ```
-   Atlas/data/raw/archive.zip
-   ```
-
-3. **Prepare the data**:
-   ```bash
-   python scripts/prepare_data.py --input data/raw/archive.zip
-   ```
-
-   This extracts and organizes 249K articles (~400MB) into `data/processed/wikipedia/`.
-
-### 🚀 Complete Training Pipeline (Recommended for New Users)
-
-**The absolute easiest way - handles everything automatically:**
-
-**Windows:**
-```powershell
-.\scripts\run_pipeline.ps1
+### Step 1: Clone the repository
+```bash
+git clone https://github.com/juliuspleunes4/Atlas.git
+cd Atlas
 ```
 
-**Linux/Mac:**
-```bash
+### Step 2: Download training data
+Get the Wikipedia SimpleEnglish dataset from [Kaggle](https://www.kaggle.com/datasets/ffatty/plaintext-wikipedia-simpleenglish) (171 MB zip file)
+
+### Step 3: Place the zip file
+```
+Atlas/data/raw/archive.zip
+```
+
+### Step 4: Run the interactive training pipeline
+```powershell
+# Windows
+.\scripts\run_pipeline.ps1
+
+# Linux/Mac
 chmod +x scripts/run_pipeline.sh
 ./scripts/run_pipeline.sh
 ```
 
-This interactive script will:
-1. ✅ Check Python and create virtual environment if needed
-2. ✅ Install Atlas package (`pip install -e .`) if needed
-3. ✅ Check for training data (prompts you if missing)
-4. ✅ Prepare data automatically if not already done
-5. ✅ Let you choose GPU config (tiny/small/default/large)
-6. ✅ Start training with your chosen configuration
-7. ✅ Handle all edge cases and errors gracefully
+**That's it!** 🎉 The script will:
+- ✅ Check Python and create virtual environment
+- ✅ Install all dependencies automatically
+- ✅ Prepare the dataset (249K articles)
+- ✅ Show you an interactive menu to choose model size
+- ✅ Start training with your selected configuration
 
-Perfect for developers who want **zero friction** from clone to training!
+The script handles everything else automatically and guides you through each step!
+
+---
+
+## 🔧 Advanced Usage
+
+### 📦 Manual Data Preparation
+
+If you need more control over data preparation:
+
+```bash
+# Basic usage
+python scripts/prepare_data.py --input data/raw/archive.zip
+
+# Custom output directory
+python scripts/prepare_data.py --input data/raw/archive.zip --output data/processed/my_wiki
+
+# List prepared datasets
+python scripts/prepare_data.py --list
+```
+
+This extracts and organizes 249K articles (~400MB) into the processed directory.
 
 ### 🏋️ Manual Training
 
-Train a model step-by-step:
-
 ```bash
-# 1. Prepare data (if not done already)
-python scripts/prepare_data.py --input data/raw/archive.zip
-
-# This will:
-# - Extract archive.zip to data/processed/wikipedia/
-# - Organize text files with clean naming (wiki_00000.txt, wiki_00001.txt, ...)
-# - Display statistics (file count, total size)
-# - Ready in seconds!
-
-# Optional: List available datasets
-python scripts/prepare_data.py --list
-
-# Optional: Custom output directory
-python scripts/prepare_data.py --input data/raw/archive.zip --output data/processed/my_wiki
-
-# 2. Train the model (choose a config based on your GPU)
+# Basic training with a configuration
 python scripts/train.py --config configs/default.yaml --train-data data/processed/wikipedia
 
-# Or use tiny config for lower memory usage:
-# python scripts/train.py --config configs/tiny.yaml --train-data data/processed/wikipedia
-```
-
-Resume training from a checkpoint:
-
-```bash
+# Train with validation data
 python scripts/train.py \
   --config configs/default.yaml \
-  --resume checkpoints/checkpoint_step_5000.pt
-```
+  --train-data data/processed/wikipedia \
+  --val-data data/processed/validation
 
-Override config parameters from CLI:
-
-```bash
+# Resume training from a checkpoint
 python scripts/train.py \
   --config configs/default.yaml \
-  --learning-rate 1e-3 \
-  --batch-size 16 \
-  --max-steps 50000
+  --train-data data/processed/wikipedia \
+  --resume checkpoints/atlas_step_5000.pt
+
+# Override config parameters from CLI
+python scripts/train.py \
+  --config configs/default.yaml \
+  --train-data data/processed/wikipedia \
+  --max-steps 100000 \
+  --save-interval 500 \
+  --eval-interval 1000
 ```
 
-**Data Preparation Options:**
-
-```bash
-# Show help
-python scripts/prepare_data.py --help
-
-# List available raw and processed datasets
-python scripts/prepare_data.py --list
-
-# Prepare with default output (data/processed/wikipedia/)
-python scripts/prepare_data.py --input data/raw/archive.zip
-
-# Prepare with custom output directory
-python scripts/prepare_data.py --input data/raw/archive.zip --output data/processed/custom_name
-```
+**Available training arguments:**
+- `--config`: Path to YAML configuration file (required)
+- `--train-data`: Path to training data directory (required)
+- `--val-data`: Path to validation data (optional)
+- `--output-dir`: Checkpoint directory (default: `./checkpoints`)
+- `--resume`: Resume from checkpoint path
+- `--max-steps`: Override max training steps
+- `--save-interval`: Save checkpoint every N steps (default: 1000)
+- `--eval-interval`: Evaluate every N steps (default: 1000)
+- `--device`: Device to use (default: auto-detect CUDA)
 
 ### 💬 Inference
 
