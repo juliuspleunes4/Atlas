@@ -40,6 +40,7 @@ class AtlasLM(nn.Module):
     def __init__(self, config: ModelConfig):
         super().__init__()
         self.config = config
+        self.gradient_checkpointing = getattr(config, 'gradient_checkpointing', False)
         
         # Embeddings
         self.embeddings = CombinedEmbedding(
@@ -107,9 +108,16 @@ class AtlasLM(nn.Module):
         # Get embeddings
         x = self.embeddings(tokens)
         
-        # Apply transformer blocks
-        for block in self.blocks:
-            x = block(x, mask=mask)
+        # Apply transformer blocks (with optional gradient checkpointing)
+        if self.gradient_checkpointing and self.training:
+            # Use gradient checkpointing to trade compute for memory
+            for block in self.blocks:
+                x = torch.utils.checkpoint.checkpoint(
+                    block, x, mask, use_reentrant=False
+                )
+        else:
+            for block in self.blocks:
+                x = block(x, mask=mask)
         
         # Final layer norm
         x = self.ln_f(x)

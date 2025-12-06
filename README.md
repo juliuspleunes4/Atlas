@@ -27,10 +27,10 @@ Atlas is currently in early development. See [`docs/ROADMAP.md`](docs/ROADMAP.md
 - ✅ Phase 0: Project Foundation
 - ✅ Phase 1: Configuration System (32 tests)
 - ✅ Phase 2: Tokenizer Integration (27 tests)
-- ✅ Phase 3: Model Architecture (42 tests)
+- ✅ Phase 3: Model Architecture (51 tests - **+9 gradient checkpointing tests**)
 - ✅ Phase 4: Data Pipeline (72 tests)
 - ✅ Phase 5: Training Loop (56 tests)
-- ✅ Phase 5.5: Training Script (9 tests)
+- ✅ Phase 5.5: Training Script (13 tests)
 - ✅ Phase 6: Inference & Generation (21 tests)
 - ✅ Phase 6.3: Inference Script (12 tests)
 - ✅ Phase 7: GGUF Export (17 tests)
@@ -41,7 +41,7 @@ Atlas is currently in early development. See [`docs/ROADMAP.md`](docs/ROADMAP.md
 **Upcoming:**
 - Phase 9-10: Advanced features and optimization
 
-**Total: 292 passing tests**
+**Total: 301 passing tests**
 
 ## ⚙️ Model Configurations
 
@@ -54,7 +54,7 @@ Atlas provides multiple pre-configured model sizes optimized for different hardw
 | **DEFAULT** | ~350M | 24 | 1024 | 16 | 1024 | 16 (×2 accum) | 12-14 GB | Medium | **Recommended** for most users |
 | **LARGE** | ~500M | 30 | 1280 | 20 | 1024 | 8 (×4 accum) | 14-15 GB | Slow | Maximum quality, high-end GPUs |
 | **XLARGE** | ~500M | 30 | 1280 | 20 | 1024 | 2 (×16 accum) | 8-10 GB | Slow | Max params with memory safety |
-| **ULTRA** | ~500M | 30 | 1280 | 20 | 512 | 1 (×32 accum) | 5-7 GB | Slowest | Extreme memory constraints |
+| **ULTRA** | ~500M | 30 | 1280 | 20 | 256 | 1 (×64 accum) | 3-5 GB | Slowest | **Cool & Quiet** - Low GPU temp |
 
 **Configuration Details:**
 
@@ -84,12 +84,13 @@ Atlas provides multiple pre-configured model sizes optimized for different hardw
   - Training time: Similar to LARGE (~2-3 weeks for 80K steps)
   - **Best choice for maximizing model size while staying within GPU limits**
 
-- **ULTRA** (`configs/ultra.yaml`): Extreme memory optimization
-  - Effective batch size: 32 (1 × 32 gradient accumulation)
-  - Same 500M parameters, shorter sequences (512 vs 1024)
-  - Uses absolute minimum VRAM (batch_size=1)
+- **ULTRA** (`configs/ultra.yaml`): Extreme low-temperature optimization
+  - Effective batch size: 64 (1 × 64 gradient accumulation)
+  - Same 500M parameters, shorter sequences (256 tokens)
+  - Uses absolute minimum VRAM (batch_size=1) + gradient checkpointing
+  - Runs COOLEST of all configs - minimal GPU load/temperature
   - Training time: Slower than XLARGE due to extreme accumulation
-  - **Use when XLARGE doesn't fit - guarantees it will run**
+  - **Best for: Maximum parameters while keeping GPU cool and quiet**
 
 **Choosing a Configuration:**
 **Choosing a Configuration:**

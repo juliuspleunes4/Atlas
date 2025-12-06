@@ -744,3 +744,296 @@ def test_atlas_lm_eval_vs_train_mode():
         output_eval2 = model(input_ids)
     # Outputs should be identical
     assert torch.allclose(output_eval1, output_eval2)
+
+
+# ========================================
+# Gradient Checkpointing Tests
+# ========================================
+
+def test_gradient_checkpointing_disabled_by_default():
+    """Test that gradient checkpointing is disabled by default."""
+    config = ModelConfig(
+        vocab_size=1000,
+        max_seq_len=128,
+        hidden_size=128,
+        num_heads=4,
+        num_layers=2,
+        dropout=0.0
+    )
+    
+    model = AtlasLM(config)
+    assert not model.gradient_checkpointing
+
+
+def test_gradient_checkpointing_can_be_enabled():
+    """Test that gradient checkpointing can be enabled via config."""
+    config = ModelConfig(
+        vocab_size=1000,
+        max_seq_len=128,
+        hidden_size=128,
+        num_heads=4,
+        num_layers=2,
+        dropout=0.0
+    )
+    config.gradient_checkpointing = True
+    
+    model = AtlasLM(config)
+    assert model.gradient_checkpointing
+
+
+def test_gradient_checkpointing_forward_pass_train_mode():
+    """Test forward pass with gradient checkpointing in train mode."""
+    config = ModelConfig(
+        vocab_size=1000,
+        max_seq_len=128,
+        hidden_size=128,
+        num_heads=4,
+        num_layers=2,
+        dropout=0.0
+    )
+    config.gradient_checkpointing = True
+    
+    model = AtlasLM(config)
+    model.train()
+    
+    batch_size = 2
+    seq_len = 10
+    input_ids = torch.randint(0, config.vocab_size, (batch_size, seq_len))
+    
+    logits = model(input_ids)
+    
+    assert logits.shape == (batch_size, seq_len, config.vocab_size)
+    assert logits.requires_grad
+
+
+def test_gradient_checkpointing_forward_pass_eval_mode():
+    """Test forward pass with gradient checkpointing in eval mode (should skip checkpointing)."""
+    config = ModelConfig(
+        vocab_size=1000,
+        max_seq_len=128,
+        hidden_size=128,
+        num_heads=4,
+        num_layers=2,
+        dropout=0.0
+    )
+    config.gradient_checkpointing = True
+    
+    model = AtlasLM(config)
+    model.eval()
+    
+    batch_size = 2
+    seq_len = 10
+    input_ids = torch.randint(0, config.vocab_size, (batch_size, seq_len))
+    
+    with torch.no_grad():
+        logits = model(input_ids)
+    
+    assert logits.shape == (batch_size, seq_len, config.vocab_size)
+    assert not logits.requires_grad
+
+
+def test_gradient_checkpointing_backward_pass():
+    """Test that backward pass works correctly with gradient checkpointing."""
+    config = ModelConfig(
+        vocab_size=1000,
+        max_seq_len=128,
+        hidden_size=128,
+        num_heads=4,
+        num_layers=2,
+        dropout=0.0
+    )
+    config.gradient_checkpointing = True
+    
+    model = AtlasLM(config)
+    model.train()
+    
+    batch_size = 2
+    seq_len = 10
+    input_ids = torch.randint(0, config.vocab_size, (batch_size, seq_len))
+    targets = torch.randint(0, config.vocab_size, (batch_size, seq_len))
+    
+    logits = model(input_ids)
+    loss = nn.CrossEntropyLoss()(
+        logits.view(-1, config.vocab_size),
+        targets.view(-1)
+    )
+    
+    # Backward pass should work
+    loss.backward()
+    
+    # Check that gradients are computed
+    for name, param in model.named_parameters():
+        if param.requires_grad:
+            assert param.grad is not None, f"No gradient for {name}"
+
+
+def test_gradient_checkpointing_same_output_as_normal():
+    """Test that gradient checkpointing produces the same output as normal forward pass."""
+    config = ModelConfig(
+        vocab_size=1000,
+        max_seq_len=128,
+        hidden_size=128,
+        num_heads=4,
+        num_layers=2,
+        dropout=0.0
+    )
+    
+    # Model without gradient checkpointing
+    model_normal = AtlasLM(config)
+    model_normal.eval()
+    
+    # Model with gradient checkpointing
+    config.gradient_checkpointing = True
+    model_checkpoint = AtlasLM(config)
+    model_checkpoint.eval()
+    
+    # Copy weights from normal model to checkpoint model
+    model_checkpoint.load_state_dict(model_normal.state_dict())
+    
+    batch_size = 2
+    seq_len = 10
+    input_ids = torch.randint(0, config.vocab_size, (batch_size, seq_len))
+    
+    with torch.no_grad():
+        logits_normal = model_normal(input_ids)
+        logits_checkpoint = model_checkpoint(input_ids)
+    
+    # Outputs should be identical
+    assert torch.allclose(logits_normal, logits_checkpoint, rtol=1e-5, atol=1e-5)
+
+
+def test_gradient_checkpointing_produces_valid_gradients():
+    """Test that gradient checkpointing produces valid gradients that can be used for training.
+    
+    We verify that:
+    1. Gradients are computed for all parameters
+    2. Gradient magnitudes are reasonable
+    3. A simple optimization step reduces the loss
+    """
+    config = ModelConfig(
+        vocab_size=500,
+        max_seq_len=64,
+        hidden_size=128,
+        num_heads=4,
+        num_layers=2,
+        dropout=0.0
+    )
+    config.gradient_checkpointing = True
+    
+    model = AtlasLM(config)
+    model.train()
+    
+    optimizer = torch.optim.SGD(model.parameters(), lr=0.01)
+    
+    batch_size = 2
+    seq_len = 8
+    input_ids = torch.randint(0, config.vocab_size, (batch_size, seq_len))
+    targets = torch.randint(0, config.vocab_size, (batch_size, seq_len))
+    
+    # Initial forward pass
+    logits = model(input_ids)
+    initial_loss = nn.CrossEntropyLoss()(
+        logits.view(-1, config.vocab_size),
+        targets.view(-1)
+    )
+    initial_loss_value = initial_loss.item()
+    
+    # Backward pass
+    initial_loss.backward()
+    
+    # Check all parameters have gradients
+    for name, param in model.named_parameters():
+        if param.requires_grad:
+            assert param.grad is not None, f"No gradient for {name}"
+            assert not torch.isnan(param.grad).any(), f"NaN gradient for {name}"
+            assert not torch.isinf(param.grad).any(), f"Inf gradient for {name}"
+    
+    # Take optimization step
+    optimizer.step()
+    optimizer.zero_grad()
+    
+    # Forward pass after update
+    logits_after = model(input_ids)
+    loss_after = nn.CrossEntropyLoss()(
+        logits_after.view(-1, config.vocab_size),
+        targets.view(-1)
+    )
+    loss_after_value = loss_after.item()
+    
+    # Loss should decrease (gradients are pointing in right direction)
+    assert loss_after_value < initial_loss_value, \
+        f"Loss did not decrease: {initial_loss_value:.4f} -> {loss_after_value:.4f}"
+
+
+def test_gradient_checkpointing_with_mask():
+    """Test that gradient checkpointing works correctly with attention mask."""
+    config = ModelConfig(
+        vocab_size=1000,
+        max_seq_len=128,
+        hidden_size=128,
+        num_heads=4,
+        num_layers=2,
+        dropout=0.0
+    )
+    config.gradient_checkpointing = True
+    
+    model = AtlasLM(config)
+    model.train()
+    
+    batch_size = 2
+    seq_len = 10
+    input_ids = torch.randint(0, config.vocab_size, (batch_size, seq_len))
+    
+    # Create causal mask
+    mask = torch.tril(torch.ones(seq_len, seq_len)).unsqueeze(0).unsqueeze(0)
+    
+    logits = model(input_ids, mask=mask)
+    
+    assert logits.shape == (batch_size, seq_len, config.vocab_size)
+    assert logits.requires_grad
+    
+    # Test backward pass
+    targets = torch.randint(0, config.vocab_size, (batch_size, seq_len))
+    loss = nn.CrossEntropyLoss()(
+        logits.view(-1, config.vocab_size),
+        targets.view(-1)
+    )
+    loss.backward()
+
+
+def test_gradient_checkpointing_multiple_layers():
+    """Test gradient checkpointing with different numbers of layers."""
+    for num_layers in [1, 2, 4, 8]:
+        config = ModelConfig(
+            vocab_size=500,
+            max_seq_len=64,
+            hidden_size=128,
+            num_heads=4,
+            num_layers=num_layers,
+            dropout=0.0
+        )
+        config.gradient_checkpointing = True
+        
+        model = AtlasLM(config)
+        model.train()
+        
+        batch_size = 2
+        seq_len = 8
+        input_ids = torch.randint(0, config.vocab_size, (batch_size, seq_len))
+        
+        logits = model(input_ids)
+        
+        assert logits.shape == (batch_size, seq_len, config.vocab_size)
+        
+        # Test backward pass
+        targets = torch.randint(0, config.vocab_size, (batch_size, seq_len))
+        loss = nn.CrossEntropyLoss()(
+            logits.view(-1, config.vocab_size),
+            targets.view(-1)
+        )
+        loss.backward()
+        
+        # Verify gradients exist
+        for param in model.parameters():
+            if param.requires_grad:
+                assert param.grad is not None

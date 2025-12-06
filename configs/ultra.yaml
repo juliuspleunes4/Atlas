@@ -5,12 +5,13 @@
 # Model architecture (~500M parameters)
 model:
   vocab_size: 50261    # GPT-2 vocab size
-  max_seq_len: 512     # Reduced from 1024 to save memory
+  max_seq_len: 256     # REDUCED from 512 to minimize GPU load/temperature
   hidden_size: 1280    # Keep large hidden size
   num_layers: 30       # Keep deep network
   num_heads: 20        # Keep many heads
   mlp_ratio: 4.0       # MLP expansion ratio
   dropout: 0.1         # Dropout probability
+  gradient_checkpointing: true  # Trade compute for memory (lowers GPU load)
 
 # Tokenizer settings
 tokenizer:
@@ -19,10 +20,10 @@ tokenizer:
 
 # Data settings
 data:
-  max_seq_len: 512     # Match model
+  max_seq_len: 256     # Match model - shorter sequences = less GPU work
   num_workers: 0       # Single worker to reduce RAM usage
 
-# Training hyperparameters (EXTREME memory optimization)
+# Training hyperparameters (EXTREME memory + LOW GPU LOAD optimization)
 training:
   learning_rate: 2.0e-4      # Lower LR for larger model
   weight_decay: 0.01
@@ -30,7 +31,7 @@ training:
   
   # ABSOLUTE MINIMUM batches with extreme gradient accumulation
   batch_size: 1              # Single sample per step (minimum possible)
-  gradient_accumulation_steps: 32  # Effective batch = 32 (same as large)
+  gradient_accumulation_steps: 64  # DOUBLED to maintain effective batch size
   
   max_steps: 80000           # More steps for larger model
   warmup_steps: 3000
@@ -38,15 +39,16 @@ training:
   
   keep_checkpoints: 2        # Number of step-based checkpoints to keep (epoch checkpoints kept separately)
 
-# EXTREME MEMORY OPTIMIZATION:
+# EXTREME MEMORY + LOW GPU LOAD OPTIMIZATION:
 # - 656M parameter model (30 layers × 1280 hidden)
 # - Batch size = 1 (absolute minimum, ~85% less VRAM than batch=8)
-# - Sequence length = 512 (50% less memory than 1024)
-# - Gradient accumulation = 32 (maintains effective batch = 32)
+# - Sequence length = 256 (75% less memory & compute than 1024, 50% less than 512)
+# - Gradient accumulation = 64 (maintains effective batch size while minimizing per-step load)
+# - Gradient checkpointing enabled (trades recomputation for lower memory/temp)
 # - Single data worker (reduces RAM pressure)
-# - Should use ~5-7GB VRAM
-# - Training will be slower but WILL FIT on constrained GPUs
-# - Best for: Maximizing parameters when memory is critical
+# - Should use ~3-5GB VRAM with COOLEST running temperature
+# - Training will be slower but runs MUCH COOLER than XLARGE
+# - Best for: Maximizing parameters while keeping GPU cool and quiet
 
 # WHEN TO USE:
 # - Your GPU keeps running out of memory with XLARGE

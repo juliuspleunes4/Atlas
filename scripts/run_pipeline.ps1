@@ -181,9 +181,10 @@ Write-Host "   - Good quality" -ForegroundColor Gray
 Write-Host "   - Safe memory margin" -ForegroundColor Gray
 Write-Host ""
 Write-Host "4. LARGE  (~500M params, ~14-15GB VRAM)" -ForegroundColor Green
+Write-Host "   - High capacity" -ForegroundColor Gray
 Write-Host "   - Best quality" -ForegroundColor Gray
-Write-Host "   - Slowest training" -ForegroundColor Gray
-Write-Host "   - Close to 16GB VRAM limit" -ForegroundColor Gray
+Write-Host "   - Requires almost full VRAM" -ForegroundColor Gray
+Write-Host ""
 Write-Host ""
 Write-Host "╔════════════════════════════════════════════════════════════════════════════╗" -ForegroundColor Magenta
 Write-Host "║              CUSTOM MEMORY-OPTIMIZED CONFIGURATIONS                        ║" -ForegroundColor Magenta
@@ -194,10 +195,10 @@ Write-Host "   - Same size as LARGE but uses less memory" -ForegroundColor Gray
 Write-Host "   - Smaller batch sizes with gradient accumulation" -ForegroundColor Gray
 Write-Host "   - Safer for GPU limits while maximizing parameters" -ForegroundColor Gray
 Write-Host ""
-Write-Host "6. ULTRA (~500M params, ~5-7GB VRAM)" -ForegroundColor Cyan
-Write-Host "   - batch_size=1, shorter sequences (512 tokens)" -ForegroundColor Gray
-Write-Host "   - Absolute minimum memory for 500M+ model" -ForegroundColor Gray
-Write-Host "   - Use when XLARGE doesn't fit" -ForegroundColor Gray
+Write-Host "6. ULTRA (~500M params, ~3-5GB VRAM)" -ForegroundColor Cyan
+Write-Host "   - Extreme memory optimization" -ForegroundColor Gray
+Write-Host "   - batch_size=1, shorter sequences (256 tokens)" -ForegroundColor Gray
+Write-Host "   - Lowest GPU load for maximum parameters" -ForegroundColor Gray
 Write-Host ""
 
 do {

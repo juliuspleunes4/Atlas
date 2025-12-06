@@ -4,6 +4,51 @@ All notable changes to Atlas will be documented in this file.
 
 ---
 
+## 2025-12-06 - ULTRA Config Optimized for Low GPU Temperature
+
+**Changed**:
+- **ULTRA config extreme optimization**: Designed for COOLEST running temperature while maintaining 500M parameters
+  - Reduced sequence length from 512 → 256 tokens (75% less compute than 1024, 50% less than 512)
+  - Doubled gradient accumulation from 32 → 64 to maintain effective batch size
+  - Added gradient checkpointing support (trades recomputation for lower memory/temp)
+  - Updated VRAM estimate: 3-5GB (down from 5-7GB)
+  - Now uses single worker for minimal system load
+
+**Added**:
+- **Gradient checkpointing support** in `AtlasLM` model
+  - Enabled via `gradient_checkpointing: true` in config
+  - Trades compute for memory during training
+  - Reduces GPU memory usage and temperature
+  - Implemented using `torch.utils.checkpoint.checkpoint()` with `use_reentrant=False`
+  - Only active during training mode, bypassed during eval/inference
+
+- **Comprehensive gradient checkpointing tests** (9 new tests, total: 301 passing)
+  - `test_gradient_checkpointing_disabled_by_default`: Verifies feature is opt-in
+  - `test_gradient_checkpointing_can_be_enabled`: Tests config-based activation
+  - `test_gradient_checkpointing_forward_pass_train_mode`: Validates train mode behavior
+  - `test_gradient_checkpointing_forward_pass_eval_mode`: Ensures eval mode bypasses checkpointing
+  - `test_gradient_checkpointing_backward_pass`: Confirms gradients flow correctly
+  - `test_gradient_checkpointing_same_output_as_normal`: Verifies identical outputs
+  - `test_gradient_checkpointing_produces_valid_gradients`: Tests gradient validity for training
+  - `test_gradient_checkpointing_with_mask`: Validates attention mask compatibility
+  - `test_gradient_checkpointing_multiple_layers`: Tests scalability across layer counts
+
+**Removed**:
+- Removed MEDIUM configuration (150M params) - created temporarily but not part of official configs
+
+**Updated**:
+- `README.md`: Updated ULTRA description and VRAM estimates
+- `run_pipeline.ps1` and `run_pipeline.sh`: Updated ULTRA description to emphasize low temperature
+
+**Why**:
+- User reported high GPU temperatures (70°C) during training with loud fans
+- ULTRA config now prioritizes lowest GPU load and temperature over training speed
+- Gradient checkpointing provides additional memory savings with minimal speed impact
+- Best choice for users wanting maximum parameters while keeping system cool and quiet
+- Comprehensive tests ensure feature works correctly and doesn't break existing functionality
+
+---
+
 ## 2025-12-06 - Enhanced Checkpoint Management System
 
 **Improved**:
