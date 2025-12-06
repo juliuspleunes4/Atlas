@@ -4,6 +4,31 @@ All notable changes to Atlas will be documented in this file.
 
 ---
 
+## 2025-12-06 - Model architecture implementation complete (Phase 3)
+
+- Implemented complete decoder-only transformer architecture following GPT-2 design
+- **Embeddings** (`atlas/model/embeddings.py`):
+  - `TokenEmbedding`: Vocabulary embedding layer
+  - `PositionalEmbedding`: Learned position embeddings
+  - `CombinedEmbedding`: Combines token and positional embeddings with dropout
+- **Attention** (`atlas/model/attention.py`):
+  - `MultiHeadAttention`: Multi-head self-attention with causal masking
+  - Efficient combined Q/K/V projection
+  - Scaled dot-product attention with cached causal mask
+- **MLP** (`atlas/model/mlp.py`):
+  - Position-wise feed-forward network with configurable activation (GELU/SiLU/ReLU)
+  - Configurable expansion ratio (default 4.0x)
+- **TransformerBlock** (`atlas/model/transformer.py`):
+  - Pre-norm architecture (LayerNorm before attention and MLP)
+  - Residual connections around attention and MLP sub-layers
+- **AtlasLM** (`atlas/model/model.py`):
+  - Complete language model assembly
+  - Weight tying between embeddings and LM head
+  - Autoregressive generation with temperature, top-k sampling, and EOS support
+  - Parameter counting utilities
+- Added 42 comprehensive tests covering all model components - **ALL PASSING**
+- Tests validate: initialization, forward pass, shape preservation, dropout behavior, causal masking, generation, different configurations
+
 ## 2025-12-06 - Tokenizer implementation complete (Phase 2)
 
 - Implemented `Tokenizer` class using tiktoken (GPT-2 BPE) as backend
