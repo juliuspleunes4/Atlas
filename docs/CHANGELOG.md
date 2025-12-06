@@ -4,6 +4,26 @@ All notable changes to Atlas will be documented in this file.
 
 ---
 
+## 2025-12-06 - Training loop implementation (Phase 5, Task 2)
+
+- Implemented `Trainer` class for training loop orchestration
+- **Training features** (`atlas/training/trainer.py`):
+  - `Trainer`: Main training loop with gradient accumulation
+  - `TrainingMetrics`: Container for training metrics (loss, perplexity, LR, tokens/sec)
+  - `train_step()`: Single training step with forward/backward pass
+  - `train_epoch()`: Full epoch training with progress bar (tqdm)
+  - Support for gradient accumulation (for large effective batch sizes)
+  - Automatic gradient clipping integration
+  - Learning rate scheduler integration
+  - Progress tracking with real-time metrics display
+- **Testing** (`tests/test_training.py`):
+  - Added 10 comprehensive tests for Trainer class
+  - Test gradient accumulation, scheduler integration, clipping
+  - Test epoch training, max steps, metrics computation
+  - Test loss decrease on overfitting (sanity check)
+  - All 210 tests passing (37 training tests total)
+- **GPU support**: Upgraded PyTorch to nightly build (2.10.0.dev20251206+cu128) for RTX 5060 Ti (sm_120) support
+
 ## 2025-12-06 - Training utilities (Phase 5, Task 1)
 
 - Implemented loss functions and optimizer utilities for training

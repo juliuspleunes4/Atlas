@@ -16,6 +16,7 @@ from atlas.training.loss import (
     compute_lm_loss_with_logits_shift,
     compute_perplexity,
 )
+from atlas.training.trainer import Trainer, TrainingMetrics
 
 __all__ = [
     "create_optimizer",
@@ -25,4 +26,6 @@ __all__ = [
     "compute_lm_loss",
     "compute_lm_loss_with_logits_shift",
     "compute_perplexity",
+    "Trainer",
+    "TrainingMetrics",
 ]

@@ -231,29 +231,29 @@
 
 ## Phase 5: Training Loop
 
-### 5.1 Loss and Optimization
-- [ ] Implement cross-entropy loss for language modeling
-- [ ] Implement optimizer setup (AdamW recommended)
-- [ ] Implement learning rate scheduler:
+### 5.1 Loss and Optimization ✅
+- [x] Implement cross-entropy loss for language modeling
+- [x] Implement optimizer setup (AdamW recommended)
+- [x] Implement learning rate scheduler:
   - Warmup phase (linear warmup)
   - Decay phase (cosine, linear, or constant)
-- [ ] Implement gradient clipping
-- [ ] Implement gradient accumulation (for large effective batch sizes)
+- [x] Implement gradient clipping
+- [x] Implement gradient accumulation (for large effective batch sizes)
 
-### 5.2 Training Loop Implementation
-- [ ] Implement main training loop:
+### 5.2 Training Loop Implementation ✅
+- [x] Implement main training loop:
   - Iterate over batches
   - Forward pass
   - Compute loss
   - Backward pass
   - Optimizer step (with gradient accumulation)
   - LR scheduler step
-- [ ] Add training metrics:
+- [x] Add training metrics:
   - Loss (per step, moving average)
   - Perplexity
   - Tokens per second
   - Learning rate tracking
-- [ ] Add logging (console and/or file):
+- [x] Add logging (console and/or file):
   - Log every N steps
   - Log to stdout with tqdm progress bar
 - [ ] Add checkpointing:
@@ -270,12 +270,12 @@
 - [ ] Run evaluation periodically during training
 - [ ] Log evaluation metrics
 
-### 5.4 Training Testing
-- [ ] Test training loop runs without crashing (1-2 steps, tiny model, tiny data)
-- [ ] Test loss decreases over a few steps (overfitting test on tiny data)
+### 5.4 Training Testing ✅
+- [x] Test training loop runs without crashing (1-2 steps, tiny model, tiny data)
+- [x] Test loss decreases over a few steps (overfitting test on tiny data)
 - [ ] Test checkpointing (save and resume)
-- [ ] Test gradient accumulation correctness
-- [ ] Test LR scheduler correctness (warmup → decay)
+- [x] Test gradient accumulation correctness
+- [x] Test LR scheduler correctness (warmup → decay)
 - [ ] Test evaluation loop
 
 ### 5.5 Training Script
