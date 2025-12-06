@@ -63,28 +63,28 @@
 
 ---
 
-## Phase 2: Tokenizer Integration
+## Phase 2: Tokenizer Integration ✅
 
-### 2.1 Tokenizer Implementation
-- [ ] Choose tokenizer backend (sentencepiece, tiktoken, or custom BPE)
-- [ ] Implement `Tokenizer` class with methods:
+### 2.1 Tokenizer Implementation ✅
+- [x] Choose tokenizer backend (tiktoken)
+- [x] Implement `Tokenizer` class with methods:
   - `encode(text: str) -> List[int]`
   - `decode(tokens: List[int]) -> str`
   - `vocab_size() -> int`
-  - Load from pretrained vocab or train new vocab
-- [ ] Add special tokens (BOS, EOS, PAD, UNK)
-- [ ] Add batch encoding/decoding support
+  - Load from pretrained vocab (GPT-2)
+- [x] Add special tokens (BOS, EOS, PAD, UNK)
+- [x] Add batch encoding/decoding support
 
-### 2.2 Tokenizer Testing
-- [ ] Test encoding/decoding round-trip
-- [ ] Test special token handling
-- [ ] Test batch operations
-- [ ] Test edge cases (empty strings, very long strings, unknown characters)
+### 2.2 Tokenizer Testing ✅
+- [x] Test encoding/decoding round-trip
+- [x] Test special token handling
+- [x] Test batch operations
+- [x] Test edge cases (empty strings, very long strings, Unicode characters)
 
-### 2.3 Vocabulary Preparation
-- [ ] Document how to train a new tokenizer (if needed)
-- [ ] Add placeholder/TODO for vocab training script
-- [ ] Ensure vocab file can be loaded from config
+### 2.3 Vocabulary Preparation ✅
+- [x] Using pretrained GPT-2 tokenizer (tiktoken)
+- [x] Tokenizer can be configured via encoding_name parameter
+- [x] Special tokens added to vocabulary automatically
 
 ---
 

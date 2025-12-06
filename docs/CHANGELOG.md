@@ -4,6 +4,15 @@ All notable changes to Atlas will be documented in this file.
 
 ---
 
+## 2025-12-06 - Tokenizer implementation complete (Phase 2)
+
+- Implemented `Tokenizer` class using tiktoken (GPT-2 BPE) as backend
+- Added support for special tokens: BOS, EOS, PAD, UNK
+- Implemented batch encoding/decoding operations
+- Added comprehensive error handling for edge cases
+- Added 27 rigorous tests covering all tokenizer functionality - all passing
+- Tests include: round-trip encoding/decoding, special tokens, batch operations, Unicode, edge cases
+
 ## 2025-12-06 - Enhanced README with badges and contribution guidelines
 
 - Added status badges (Python version, license, code style, tests)
