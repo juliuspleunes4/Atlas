@@ -1,5 +1,10 @@
 # Atlas
 
+[![Python 3.8+](https://img.shields.io/badge/python-3.8+-blue.svg)](https://www.python.org/downloads/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+[![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
+[![Tests](https://img.shields.io/badge/tests-passing-brightgreen.svg)](tests/)
+
 **A from-scratch language model implementation with GGUF export.**
 
 Atlas is a complete pipeline for building, training, and deploying decoder-only transformer language models. The project focuses on clarity, modularity, and the ability to export trained models to GGUF format for efficient inference.
@@ -18,18 +23,68 @@ Atlas is a complete pipeline for building, training, and deploying decoder-only 
 
 Atlas is currently in early development. See [`docs/ROADMAP.md`](docs/ROADMAP.md) for the full development plan.
 
+**Completed:**
+- ✅ Phase 0: Project Foundation
+- ✅ Phase 1: Configuration System (with 32 passing tests)
+
+**In Progress:**
+- 🔄 Phase 2: Tokenizer Integration
+
+**Upcoming:**
+- Phase 3: Model Architecture
+- Phase 4: Data Pipeline
+- Phase 5: Training Loop
+- Phase 6: Inference & Generation
+- Phase 7: GGUF Export
+
 ## Installation
 
+### Prerequisites
+
+- Python 3.8 or higher
+- pip (Python package manager)
+- Git
+
+### Setup Instructions
+
+1. **Clone the repository**
+
 ```bash
-# Clone the repository
 git clone https://github.com/juliuspleunes4/Atlas.git
 cd Atlas
+```
 
-# Install dependencies
+2. **Create a virtual environment**
+
+**On Windows:**
+```powershell
+python -m venv venv
+.\venv\Scripts\Activate.ps1
+```
+
+**On macOS/Linux:**
+```bash
+python3 -m venv venv
+source venv/bin/activate
+```
+
+3. **Install dependencies**
+
+```bash
+pip install --upgrade pip
 pip install -r requirements.txt
+```
 
-# Install Atlas as a package (development mode)
+4. **Install Atlas as a package (development mode)**
+
+```bash
 pip install -e .
+```
+
+5. **Verify installation**
+
+```bash
+pytest tests/ -v
 ```
 
 ## Quick Start
@@ -92,21 +147,41 @@ Atlas implements a **decoder-only transformer** architecture (GPT-style):
 
 ### Running Tests
 
+Run all tests:
 ```bash
-pytest tests/
+pytest tests/ -v
+```
+
+Run specific test file:
+```bash
+pytest tests/test_config.py -v
+```
+
+Run with coverage:
+```bash
+pytest tests/ --cov=atlas --cov-report=html
 ```
 
 ### Code Quality
 
+Format code:
 ```bash
-# Format code
 black atlas/ tests/ scripts/
+```
 
-# Lint
+Lint code:
+```bash
 flake8 atlas/ tests/ scripts/
+```
 
-# Type checking
+Type checking:
+```bash
 mypy atlas/
+```
+
+Run all quality checks:
+```bash
+black atlas/ tests/ scripts/ && flake8 atlas/ tests/ scripts/ && mypy atlas/ && pytest tests/ -v
 ```
 
 ## Roadmap
@@ -126,18 +201,147 @@ See [`docs/ROADMAP.md`](docs/ROADMAP.md) for the complete development plan, whic
 
 ## Contributing
 
-Contributions are welcome! Please ensure:
+We welcome contributions to Atlas! Whether you're fixing bugs, adding features, improving documentation, or writing tests, your help is appreciated.
 
-1. All tests pass
-2. Code follows the existing style (black, flake8, mypy)
-3. New features include tests
-4. Changes are documented in `docs/CHANGELOG.md`
+### Getting Started
+
+1. **Fork the repository** on GitHub
+2. **Clone your fork** locally:
+   ```bash
+   git clone https://github.com/juliuspleunes4/Atlas.git
+   cd Atlas
+   ```
+3. **Create a virtual environment** and install dependencies (see Installation section)
+4. **Create a new branch** for your changes:
+   ```bash
+   git checkout -b feature/your-feature-name
+   ```
+
+### Development Guidelines
+
+#### Code Quality
+
+- **Format your code** with black:
+  ```bash
+  black atlas/ tests/ scripts/
+  ```
+- **Lint your code** with flake8:
+  ```bash
+  flake8 atlas/ tests/ scripts/
+  ```
+- **Type check** with mypy:
+  ```bash
+  mypy atlas/
+  ```
+
+#### Testing
+
+- **Write tests** for all new features and bug fixes
+- **Run the test suite** to ensure nothing breaks:
+  ```bash
+  pytest tests/ -v
+  ```
+- **Check test coverage**:
+  ```bash
+  pytest tests/ --cov=atlas --cov-report=html
+  ```
+- **Aim for >80% coverage** on new code
+
+#### Commit Guidelines
+
+- Write clear, descriptive commit messages
+- Use conventional commit format:
+  - `feat:` for new features
+  - `fix:` for bug fixes
+  - `docs:` for documentation changes
+  - `test:` for test additions/changes
+  - `refactor:` for code refactoring
+  - `chore:` for maintenance tasks
+
+#### Documentation
+
+- Update `docs/CHANGELOG.md` with your changes
+- Add docstrings to all public functions and classes
+- Update README.md if adding user-facing features
+
+### Submitting Changes
+
+1. **Ensure all tests pass** and code is formatted
+2. **Commit your changes**:
+   ```bash
+   git add .
+   git commit -m "feat: add amazing new feature"
+   ```
+3. **Push to your fork**:
+   ```bash
+   git push origin feature/your-feature-name
+   ```
+4. **Create a Pull Request** on GitHub
+5. **Address review feedback** if requested
+
+### What to Contribute
+
+Check out the [roadmap](docs/ROADMAP.md) for areas that need work:
+
+- 🔧 **Core Features**: Model architecture, training loop, inference
+- 📝 **Documentation**: Tutorials, examples, API docs
+- 🧪 **Tests**: Increase coverage, add edge cases
+- 🐛 **Bug Fixes**: Check issues for known bugs
+- ✨ **Optimizations**: Performance improvements, memory efficiency
+
+### Code of Conduct
+
+- Be respectful and inclusive
+- Provide constructive feedback
+- Focus on the code, not the person
+- Help others learn and grow
 
 ## License
 
 See [LICENSE](LICENSE) for details.
 
+## FAQ
+
+### How do I activate the virtual environment?
+
+**Windows (PowerShell):**
+```powershell
+.\venv\Scripts\Activate.ps1
+```
+
+**Windows (Command Prompt):**
+```cmd
+venv\Scripts\activate.bat
+```
+
+**macOS/Linux:**
+```bash
+source venv/bin/activate
+```
+
+### How do I deactivate the virtual environment?
+
+Simply run:
+```bash
+deactivate
+```
+
+### Tests are failing, what should I do?
+
+1. Ensure you've activated the virtual environment
+2. Make sure all dependencies are installed: `pip install -r requirements.txt`
+3. Try running a specific test file to isolate the issue
+4. Check if you're using Python 3.8+: `python --version`
+
+### Where should I start contributing?
+
+1. Check the [roadmap](docs/ROADMAP.md) for tasks marked as `[ ]` (not started)
+2. Look for `TODO` comments in the codebase
+3. Improve test coverage in existing modules
+4. Add documentation and examples
+
 ## Acknowledgments
 
 - Inspired by modern transformer architectures (GPT, LLaMA)
 - GGUF format from [ggerganov/llama.cpp](https://github.com/ggerganov/llama.cpp)
+- Built with [PyTorch](https://pytorch.org/)
