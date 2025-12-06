@@ -71,11 +71,18 @@ logs/
 *.gguf
 
 # Data files (not source code)
-/data/
+# Allow structure and documentation, but ignore actual data
+/data/*
+!/data/README.md
+!/data/raw/
+!/data/raw/.gitkeep
+!/data/processed/
+!/data/processed/.gitkeep
 *.txt
 *.jsonl
 *.csv
 *.tsv
+*.zip
 
 # OS
 .DS_Store
