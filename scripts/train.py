@@ -43,6 +43,54 @@ interrupted = False
 logger = None
 
 
+class ColoredFormatter(logging.Formatter):
+    """Custom formatter with colors for console output."""
+    
+    # ANSI color codes
+    COLORS = {
+        'HEADER': '\033[95m',
+        'BLUE': '\033[94m',
+        'CYAN': '\033[96m',
+        'GREEN': '\033[92m',
+        'YELLOW': '\033[93m',
+        'RED': '\033[91m',
+        'BOLD': '\033[1m',
+        'UNDERLINE': '\033[4m',
+        'RESET': '\033[0m',
+    }
+    
+    def format(self, record):
+        msg = record.getMessage()
+        
+        # Color section headers [1/6], [2/6], etc.
+        if msg.startswith('[') and '/6]' in msg:
+            return f"{self.COLORS['CYAN']}{self.COLORS['BOLD']}{msg}{self.COLORS['RESET']}"
+        
+        # Color EPOCH lines
+        if '>>> EPOCH' in msg:
+            return f"{self.COLORS['YELLOW']}{self.COLORS['BOLD']}{msg}{self.COLORS['RESET']}"
+        
+        # Color success/saved indicators
+        if '[SAVED]' in msg or '[BEST]' in msg or '[SUCCESS]' in msg:
+            return f"{self.COLORS['GREEN']}{msg}{self.COLORS['RESET']}"
+        
+        # Color error/warning
+        if '[ERROR]' in msg or 'ERROR' in msg:
+            return f"{self.COLORS['RED']}{self.COLORS['BOLD']}{msg}{self.COLORS['RESET']}"
+        if '[WARNING]' in msg or 'WARNING' in msg:
+            return f"{self.COLORS['YELLOW']}{msg}{self.COLORS['RESET']}"
+        
+        # Color separator lines
+        if msg.strip().startswith('=') or msg.strip().startswith('-'):
+            return f"{self.COLORS['BLUE']}{msg}{self.COLORS['RESET']}"
+        
+        # Color step/epoch summaries
+        if 'Summary:' in msg or 'Configuration' in msg:
+            return f"{self.COLORS['CYAN']}{msg}{self.COLORS['RESET']}"
+        
+        return msg
+
+
 def setup_logging(output_dir: str, resume_checkpoint: Optional[str] = None):
     """
     Setup logging to both console and file.
@@ -75,11 +123,11 @@ def setup_logging(output_dir: str, resume_checkpoint: Optional[str] = None):
     # Console handler with colored output
     console_handler = logging.StreamHandler(sys.stdout)
     console_handler.setLevel(logging.INFO)
-    console_formatter = logging.Formatter('%(message)s')
+    console_formatter = ColoredFormatter('%(message)s')
     console_handler.setFormatter(console_formatter)
     logger.addHandler(console_handler)
     
-    # File handler
+    # File handler (no colors in file)
     file_handler = logging.FileHandler(log_file, mode='a')
     file_handler.setLevel(logging.INFO)
     file_formatter = logging.Formatter('%(asctime)s | %(message)s', datefmt='%Y-%m-%d %H:%M:%S')

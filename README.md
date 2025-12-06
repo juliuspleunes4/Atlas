@@ -54,6 +54,7 @@ Atlas provides multiple pre-configured model sizes optimized for different hardw
 | **DEFAULT** | ~350M | 24 | 1024 | 16 | 1024 | 16 (×2 accum) | 12-14 GB | Medium | **Recommended** for most users |
 | **LARGE** | ~500M | 30 | 1280 | 20 | 1024 | 8 (×4 accum) | 14-15 GB | Slow | Maximum quality, high-end GPUs |
 | **XLARGE** | ~500M | 30 | 1280 | 20 | 1024 | 2 (×16 accum) | 8-10 GB | Slow | Max params with memory safety |
+| **ULTRA** | ~500M | 30 | 1280 | 20 | 512 | 1 (×32 accum) | 5-7 GB | Slowest | Extreme memory constraints |
 
 **Configuration Details:**
 
@@ -77,13 +78,20 @@ Atlas provides multiple pre-configured model sizes optimized for different hardw
   - Effective batch size: 32 (8 × 4 gradient accumulation)
   - Training time: ~2-3 weeks on RTX 3080 for 80K steps
   - Close to 16GB VRAM limit - ensure good cooling
-
 - **XLARGE** (`configs/xlarge.yaml`): Memory-optimized maximum size
   - Effective batch size: 32 (2 × 16 gradient accumulation)
   - Same 500M parameters as LARGE but uses 40% less VRAM
   - Training time: Similar to LARGE (~2-3 weeks for 80K steps)
   - **Best choice for maximizing model size while staying within GPU limits**
 
+- **ULTRA** (`configs/ultra.yaml`): Extreme memory optimization
+  - Effective batch size: 32 (1 × 32 gradient accumulation)
+  - Same 500M parameters, shorter sequences (512 vs 1024)
+  - Uses absolute minimum VRAM (batch_size=1)
+  - Training time: Slower than XLARGE due to extreme accumulation
+  - **Use when XLARGE doesn't fit - guarantees it will run**
+
+**Choosing a Configuration:**
 **Choosing a Configuration:**
 
 Use the automated training script to select interactively:
