@@ -35,7 +35,7 @@ training:
   warmup_steps: 3000
   scheduler_type: "cosine"
   
-  keep_checkpoints: 2        # Keep fewer checkpoints (large model files)
+  keep_checkpoints: 2        # Number of step-based checkpoints to keep (epoch checkpoints kept separately)
 
 # WARNING:
 # - This config uses ~14-15GB VRAM

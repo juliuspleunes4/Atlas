@@ -35,7 +35,7 @@ training:
   warmup_steps: 500
   scheduler_type: "cosine"
   
-  keep_checkpoints: 2
+  keep_checkpoints: 2        # Number of step-based checkpoints to keep (epoch checkpoints kept separately)
 
 # Use this for:
 # - Testing on low-end GPUs (4-6GB VRAM)

@@ -35,7 +35,7 @@ training:
   warmup_steps: 1000
   scheduler_type: "cosine"
   
-  keep_checkpoints: 3
+  keep_checkpoints: 3        # Number of step-based checkpoints to keep (epoch checkpoints kept separately)
 
 # Use this for:
 # - Quick experiments and testing

@@ -38,7 +38,7 @@ training:
   scheduler_type: "cosine"   # LR scheduler (cosine, linear, constant)
   
   # Checkpointing
-  keep_checkpoints: 3        # Number of checkpoints to keep (saves disk space)
+  keep_checkpoints: 3        # Number of step-based checkpoints to keep (epoch checkpoints kept separately) (saves disk space)
 
 # Notes:
 # - Model size: ~350M parameters (similar to GPT-2 Medium)

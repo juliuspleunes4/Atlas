@@ -433,7 +433,8 @@ def main():
         checkpoint_dir=args.output_dir,
         model_name='atlas',
         keep_best=True,
-        keep_last_n=config['training'].get('keep_checkpoints', 3),
+        keep_last_n=config['training'].get('keep_checkpoints', 3),  # Step-based checkpoints
+        keep_last_epochs=5,  # Keep last 5 epoch checkpoints
     )
     
     logger.info(f"  Optimizer: AdamW")
@@ -454,13 +455,19 @@ def main():
     logger.info(f"  Estimated epochs to complete: ~{estimated_epochs:.1f}")
     logger.info(f"  Tokens per step: {tokens_per_step:,}")
     
+    # Auto-adjust save_interval if not explicitly set to aim for ~10 minute intervals
+    # We'll refine this after the first few steps based on actual throughput
+    auto_save_interval = args.save_interval
+    save_interval_adjusted = False
+    
     # Training loop
     logger.info("\n[6/6] Starting training...")
     logger.info("=" * 80)
     logger.info(f"Training from step {start_step} to {config['training']['max_steps']}")
     logger.info(f"Logging interval: every {args.log_interval} steps")
     logger.info(f"Eval interval: every {args.eval_interval} steps")
-    logger.info(f"Save interval: every {args.save_interval} steps")
+    logger.info(f"Save interval: every {auto_save_interval} steps (will auto-adjust for ~10 min)")
+    logger.info(f"Epoch checkpoints: saved at end of each epoch (keep last 5)")
     logger.info("=" * 80)
     
     max_steps = config['training']['max_steps']
@@ -487,6 +494,17 @@ def main():
             tokens_processed = len(train_dataset) * config['model']['max_seq_len']
             tokens_per_sec = tokens_processed / epoch_time
             
+            # Auto-adjust save_interval after first epoch for ~10 minute intervals
+            if not save_interval_adjusted and epoch == start_epoch + 1:
+                steps_in_epoch = trainer.global_step - start_step
+                avg_time_per_step = epoch_time / steps_in_epoch if steps_in_epoch > 0 else 10
+                # Target 10 minutes = 600 seconds
+                target_save_interval = max(50, int(600 / avg_time_per_step))
+                if target_save_interval != auto_save_interval:
+                    auto_save_interval = target_save_interval
+                    logger.info(f"\n[INFO] Auto-adjusted save interval to {auto_save_interval} steps (~10 min based on {avg_time_per_step:.1f}s/step)")
+                    save_interval_adjusted = True
+            
             logger.info(f"\n{'-'*80}")
             logger.info(f"Epoch {epoch} Summary:")
             logger.info(f"  Train loss: {train_stats['loss']:.4f}")
@@ -501,6 +519,27 @@ def main():
                 memory_allocated = torch.cuda.memory_allocated() / 1024**3
                 memory_reserved = torch.cuda.memory_reserved() / 1024**3
                 logger.info(f"  GPU memory: {memory_allocated:.2f}GB allocated, {memory_reserved:.2f}GB reserved")
+            logger.info(f"{'-'*80}")
+            
+            # Save epoch checkpoint (always at end of epoch)
+            logger.info(f"\n{'-'*80}")
+            logger.info("Saving epoch checkpoint...")
+            epoch_metadata = CheckpointMetadata(
+                step=trainer.global_step,
+                epoch=epoch,
+                loss=train_stats['loss'],
+                perplexity=train_stats['perplexity'],
+                learning_rate=optimizer.param_groups[0]['lr'],
+            )
+            epoch_checkpoint_path = checkpoint_manager.save_checkpoint(
+                model,
+                optimizer,
+                epoch_metadata,
+                scheduler=scheduler,
+                is_best=False,
+                is_epoch_end=True,
+            )
+            logger.info(f"  [SAVED] Epoch checkpoint: {epoch_checkpoint_path}")
             logger.info(f"{'-'*80}")
             
             # Evaluate on validation set
@@ -528,10 +567,10 @@ def main():
                 val_stats = None
                 is_best = False
             
-            # Save checkpoint
-            if trainer.global_step % args.save_interval == 0 or interrupted:
+            # Save step-based checkpoint (time-based interval)
+            if trainer.global_step % auto_save_interval == 0 or interrupted:
                 logger.info(f"\n{'-'*80}")
-                logger.info("Saving checkpoint...")
+                logger.info("Saving step checkpoint...")
                 metadata = CheckpointMetadata(
                     step=trainer.global_step,
                     epoch=epoch,
@@ -547,10 +586,11 @@ def main():
                     metadata,
                     scheduler=scheduler,
                     is_best=is_best,
+                    is_epoch_end=False,
                 )
-                logger.info(f"  [SAVED] Checkpoint: {checkpoint_path}")
+                logger.info(f"  [SAVED] Step checkpoint: {checkpoint_path}")
                 if is_best:
-                    logger.info(f"  [BEST] Best model saved")
+                    logger.info(f"  [BEST] Best model saved (always kept)")
                 logger.info(f"{'-'*80}")
             
             # Check if interrupted

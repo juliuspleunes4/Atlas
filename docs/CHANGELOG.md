@@ -4,6 +4,54 @@ All notable changes to Atlas will be documented in this file.
 
 ---
 
+## 2025-12-06 - Enhanced Checkpoint Management System
+
+**Improved**:
+- **Epoch-based checkpoints**: Now saves checkpoint at the end of every epoch (keeps last 5)
+- **Step-based checkpoints**: Continues to save at intervals (keeps last 3 for TINY/SMALL/DEFAULT, 2 for LARGE/XLARGE)
+- **Best model**: Always kept separately, never deleted regardless of other cleanup rules
+- **Auto-adjusted intervals**: Save interval automatically adjusts after first epoch to target ~10 minute intervals
+- **Checkpoint overwriting**: Existing checkpoints are properly overwritten when resuming training
+- Updated `CheckpointManager` class:
+  - Added `keep_last_epochs` parameter (default: 5)
+  - Added `is_epoch_end` parameter to `save_checkpoint()`
+  - Separate cleanup logic for step-based vs epoch-based checkpoints
+  - Best checkpoint now saves with metadata JSON
+
+**Checkpoint naming convention**:
+- Step checkpoints: `atlas_step_1000.pt`
+- Epoch checkpoints: `atlas_epoch_5_step_2340.pt`
+- Best model: `atlas_best.pt` (always kept)
+
+**Example checkpoint directory after training**:
+```
+checkpoints/
+├── atlas_best.pt                    # Best validation loss (always kept)
+├── atlas_step_5000.pt              # Recent step checkpoint
+├── atlas_step_5250.pt              # Recent step checkpoint
+├── atlas_epoch_10_step_4680.pt     # End of epoch 10
+├── atlas_epoch_11_step_5148.pt     # End of epoch 11
+├── atlas_epoch_12_step_5616.pt     # End of epoch 12
+└── ... (+ JSON metadata for each)
+```
+
+## 2025-12-06 - Added Memory-Optimized XLARGE Configuration
+
+**Added**:
+- New `configs/xlarge.yaml` configuration for memory-constrained training
+  - Same 500M parameters as LARGE config
+  - Reduced batch size (2 vs 8) with increased gradient accumulation (16 vs 4)
+  - Uses ~8-10GB VRAM instead of 14-15GB (40% reduction)
+  - Same effective batch size (32) maintains training dynamics
+  - Perfect for maximizing model size while staying within GPU limits
+- Updated `run_pipeline.ps1/.sh` to include XLARGE option (option 5)
+- Updated README.md configuration comparison table with XLARGE details
+
+**Why this matters**:
+- Allows training largest possible models on memory-limited GPUs
+- Gradient accumulation technique maintains training quality
+- Provides safer memory margin for 16GB GPUs like RTX 5060 Ti
+
 ## 2025-12-06 - Renamed Training Scripts and Removed Obsolete Files
 
 **Changed**:

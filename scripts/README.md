@@ -73,6 +73,7 @@ python scripts/export_gguf.py --checkpoint checkpoints/best_model.pt --output at
 
 All configuration files are in the `configs/` directory:
 - **`tiny.yaml`**: Ultra-lightweight (40M params, 4-6GB VRAM)
-- **`small.yaml`**: Small model (124M params, 8-10GB VRAM)
-- **`default.yaml`**: Standard model (350M params, 12-16GB VRAM)
-- **`large.yaml`**: Large model (500M params, 24-32GB VRAM)
+- **`small.yaml`**: Small model (124M params, 6-8GB VRAM)
+- **`default.yaml`**: Standard model (350M params, 12-14GB VRAM)
+- **`large.yaml`**: Large model (500M params, 14-15GB VRAM)
+- **`xlarge.yaml`**: Memory-optimized large (500M params, 8-10GB VRAM) - Uses gradient accumulation

@@ -1,0 +1,53 @@
+# Atlas Training Configuration - EXTRA LARGE MODEL
+# Maximum parameters (~500M) optimized for GPU memory constraints
+# Uses aggressive gradient accumulation for large effective batch sizes
+
+# Model architecture (GPT-2 Large-ish - ~500M parameters)
+model:
+  vocab_size: 50261    # GPT-2 vocab size
+  max_seq_len: 1024    # Maximum sequence length
+  hidden_size: 1280    # Hidden dimension (same as large)
+  num_layers: 30       # Number of transformer layers (same as large)
+  num_heads: 20        # Number of attention heads (same as large)
+  mlp_ratio: 4.0       # MLP expansion ratio
+  dropout: 0.1         # Dropout probability
+
+# Tokenizer settings
+tokenizer:
+  name: "gpt2"
+  encoding: "gpt2"
+
+# Data settings
+data:
+  max_seq_len: 1024
+  num_workers: 2
+
+# Training hyperparameters (aggressively optimized for memory)
+training:
+  learning_rate: 2.0e-4      # Lower LR for larger model
+  weight_decay: 0.01
+  max_grad_norm: 1.0
+  
+  # ULTRA-SMALL batches with heavy gradient accumulation
+  batch_size: 2              # Minimal batch size to reduce VRAM
+  gradient_accumulation_steps: 16  # Effective batch = 32 (same as large)
+  
+  max_steps: 80000           # More steps for larger model
+  warmup_steps: 3000
+  scheduler_type: "cosine"
+  
+  keep_checkpoints: 2        # Number of step-based checkpoints to keep (epoch checkpoints kept separately)
+
+# MEMORY OPTIMIZATION NOTES:
+# - Same 500M parameter model as large.yaml
+# - Batch size reduced from 8 to 2 (75% less VRAM per step)
+# - Gradient accumulation increased from 4 to 16
+# - Effective batch size remains 32 (same training dynamics)
+# - Should use ~8-10GB VRAM instead of 14-15GB
+# - Training will be slightly slower per step, but much more stable
+# - Perfect for maximizing model size while staying within GPU limits
+
+# PERFORMANCE COMPARISON:
+# large.yaml:  batch_size=8,  grad_accum=4,  effective_batch=32,  ~14-15GB VRAM
+# xlarge.yaml: batch_size=2,  grad_accum=16, effective_batch=32,  ~8-10GB VRAM
+# Same model, same effective training, 40% less memory!

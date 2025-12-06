@@ -183,17 +183,23 @@ Available configurations:
    - Slowest training
    - Close to 16GB VRAM limit
 
+5. XLARGE (~500M params, ~8-10GB VRAM) [MEMORY OPTIMIZED]
+   - Same size as LARGE but uses less memory
+   - Smaller batch sizes with gradient accumulation
+   - Safer for GPU limits while maximizing parameters
+
 "@ -ForegroundColor White
 
 do {
-    $choice = Read-Host "Choose configuration (1/2/3/4)"
-} while ($choice -notin @("1", "2", "3", "4"))
+    $choice = Read-Host "Choose configuration (1/2/3/4/5)"
+} while ($choice -notin @("1", "2", "3", "4", "5"))
 
 $configFile = switch ($choice) {
     "1" { "configs/tiny.yaml"; $configName = "TINY" }
     "2" { "configs/small.yaml"; $configName = "SMALL" }
     "3" { "configs/default.yaml"; $configName = "DEFAULT" }
     "4" { "configs/large.yaml"; $configName = "LARGE" }
+    "5" { "configs/xlarge.yaml"; $configName = "XLARGE" }
 }
 
 Write-Success "Selected: $configName configuration"

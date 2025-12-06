@@ -151,15 +151,21 @@ Available configurations:
    - Slowest training
    - Close to 16GB VRAM limit
 
+4. XLARGE (~500M params, ~8-10GB VRAM) [MEMORY OPTIMIZED]
+   - Same size as LARGE but uses less memory
+   - Smaller batch sizes with gradient accumulation
+   - Safer for GPU limits while maximizing parameters
+
 EOF
 
 while true; do
-    read -p "Choose configuration (1/2/3): " choice
+    read -p "Choose configuration (1/2/3/4): " choice
     case $choice in
         1) CONFIG_FILE="configs/small.yaml"; CONFIG_NAME="SMALL"; break;;
         2) CONFIG_FILE="configs/default.yaml"; CONFIG_NAME="DEFAULT"; break;;
         3) CONFIG_FILE="configs/large.yaml"; CONFIG_NAME="LARGE"; break;;
-        *) warning "Invalid choice. Please enter 1, 2, or 3.";;
+        4) CONFIG_FILE="configs/xlarge.yaml"; CONFIG_NAME="XLARGE"; break;;
+        *) warning "Invalid choice. Please enter 1, 2, 3, or 4.";;
     esac
 done
 

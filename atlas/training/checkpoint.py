@@ -47,6 +47,7 @@ class CheckpointManager:
     - Track best model based on validation metric
     - Automatic checkpoint directory management
     - Resume training from checkpoint
+    - Separate tracking for step-based and epoch-based checkpoints
     """
     
     def __init__(
@@ -55,6 +56,7 @@ class CheckpointManager:
         model_name: str = 'atlas',
         keep_best: bool = True,
         keep_last_n: Optional[int] = 3,
+        keep_last_epochs: Optional[int] = 5,
     ):
         """
         Initialize checkpoint manager.
@@ -63,12 +65,14 @@ class CheckpointManager:
             checkpoint_dir: Directory to save checkpoints
             model_name: Name prefix for checkpoint files
             keep_best: Whether to track and save best model
-            keep_last_n: Number of recent checkpoints to keep (None for all)
+            keep_last_n: Number of recent step-based checkpoints to keep (None for all)
+            keep_last_epochs: Number of recent epoch checkpoints to keep (None for all)
         """
         self.checkpoint_dir = Path(checkpoint_dir)
         self.model_name = model_name
         self.keep_best = keep_best
         self.keep_last_n = keep_last_n
+        self.keep_last_epochs = keep_last_epochs
         
         # Create checkpoint directory
         self.checkpoint_dir.mkdir(parents=True, exist_ok=True)
@@ -84,6 +88,7 @@ class CheckpointManager:
         metadata: CheckpointMetadata,
         scheduler: Optional[torch.optim.lr_scheduler.LRScheduler] = None,
         is_best: bool = False,
+        is_epoch_end: bool = False,
     ) -> str:
         """
         Save checkpoint with model, optimizer, and scheduler state.
@@ -94,6 +99,7 @@ class CheckpointManager:
             metadata: Checkpoint metadata
             scheduler: Optional scheduler to save
             is_best: Whether this is the best model so far
+            is_epoch_end: Whether this is an end-of-epoch checkpoint
         
         Returns:
             Path to saved checkpoint
@@ -108,11 +114,14 @@ class CheckpointManager:
         if scheduler is not None:
             checkpoint['scheduler_state_dict'] = scheduler.state_dict()
         
-        # Checkpoint filename
-        checkpoint_filename = f'{self.model_name}_step_{metadata.step}.pt'
+        # Checkpoint filename - distinguish between step and epoch checkpoints
+        if is_epoch_end:
+            checkpoint_filename = f'{self.model_name}_epoch_{metadata.epoch}_step_{metadata.step}.pt'
+        else:
+            checkpoint_filename = f'{self.model_name}_step_{metadata.step}.pt'
         checkpoint_path = self.checkpoint_dir / checkpoint_filename
         
-        # Save checkpoint
+        # Save checkpoint (overwrites if exists)
         torch.save(checkpoint, checkpoint_path)
         
         # Save metadata as JSON for easy inspection
@@ -120,16 +129,21 @@ class CheckpointManager:
         with open(metadata_path, 'w') as f:
             json.dump(metadata.to_dict(), f, indent=2)
         
-        # Save as best if applicable
+        # Save as best if applicable (always keep separate from others)
         if is_best and self.keep_best:
             best_path = self.checkpoint_dir / f'{self.model_name}_best.pt'
             torch.save(checkpoint, best_path)
+            best_metadata_path = best_path.with_suffix('.json')
+            with open(best_metadata_path, 'w') as f:
+                json.dump(metadata.to_dict(), f, indent=2)
             self.best_checkpoint_path = str(best_path)
             self.best_metric = metadata.loss
         
         # Clean up old checkpoints
-        if self.keep_last_n is not None:
-            self._cleanup_old_checkpoints()
+        if is_epoch_end and self.keep_last_epochs is not None:
+            self._cleanup_old_epoch_checkpoints()
+        elif not is_epoch_end and self.keep_last_n is not None:
+            self._cleanup_old_step_checkpoints()
         
         return str(checkpoint_path)
     
@@ -228,9 +242,13 @@ class CheckpointManager:
         
         return self.load_checkpoint(str(latest_checkpoint), model, optimizer, scheduler, device)
     
-    def _cleanup_old_checkpoints(self):
-        """Remove old checkpoints, keeping only the most recent N."""
-        checkpoints = list(self.checkpoint_dir.glob(f'{self.model_name}_step_*.pt'))
+    def _cleanup_old_step_checkpoints(self):
+        """Remove old step-based checkpoints, keeping only the most recent N."""
+        # Only match step-based checkpoints (not epoch checkpoints)
+        checkpoints = [
+            p for p in self.checkpoint_dir.glob(f'{self.model_name}_step_*.pt')
+            if '_epoch_' not in p.name  # Exclude epoch checkpoints
+        ]
         
         if len(checkpoints) <= self.keep_last_n:
             return
@@ -238,8 +256,30 @@ class CheckpointManager:
         # Sort by modification time
         checkpoints.sort(key=lambda p: p.stat().st_mtime, reverse=True)
         
-        # Remove old checkpoints
+        # Remove old checkpoints (but never remove best checkpoint)
         for checkpoint in checkpoints[self.keep_last_n:]:
+            # Skip if this is the best checkpoint
+            if checkpoint.name == f'{self.model_name}_best.pt':
+                continue
+            checkpoint.unlink()
+            # Also remove associated JSON metadata
+            json_path = checkpoint.with_suffix('.json')
+            if json_path.exists():
+                json_path.unlink()
+    
+    def _cleanup_old_epoch_checkpoints(self):
+        """Remove old epoch checkpoints, keeping only the most recent N."""
+        # Only match epoch-based checkpoints
+        checkpoints = list(self.checkpoint_dir.glob(f'{self.model_name}_epoch_*.pt'))
+        
+        if len(checkpoints) <= self.keep_last_epochs:
+            return
+        
+        # Sort by modification time
+        checkpoints.sort(key=lambda p: p.stat().st_mtime, reverse=True)
+        
+        # Remove old checkpoints
+        for checkpoint in checkpoints[self.keep_last_epochs:]:
             checkpoint.unlink()
             # Also remove associated JSON metadata
             json_path = checkpoint.with_suffix('.json')
