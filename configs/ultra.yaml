@@ -11,7 +11,6 @@ model:
   num_heads: 20        # Keep many heads
   mlp_ratio: 4.0       # MLP expansion ratio
   dropout: 0.1         # Dropout probability
-  gradient_checkpointing: true  # Trade compute for memory (lowers GPU load)
 
 # Tokenizer settings
 tokenizer:
@@ -37,6 +36,7 @@ training:
   warmup_steps: 3000
   scheduler_type: "cosine"
   
+  gradient_checkpointing: true  # Trade compute for memory (lowers GPU load)
   keep_checkpoints: 2        # Number of step-based checkpoints to keep (epoch checkpoints kept separately)
 
 # EXTREME MEMORY + LOW GPU LOAD OPTIMIZATION:
