@@ -35,8 +35,8 @@ Atlas is currently in early development. See [`docs/ROADMAP.md`](docs/ROADMAP.md
 - ✅ Phase 6.3: Inference Script (12 tests)
 - ✅ Phase 7: GGUF Export (17 tests)
 
-**In Progress:**
-- 🔄 Phase 8: End-to-End Integration
+**Skipped (for now):**
+- ⏭️ Phase 8: End-to-End Integration (individual components thoroughly tested)
 
 **Upcoming:**
 - Phase 9-10: Advanced features and optimization

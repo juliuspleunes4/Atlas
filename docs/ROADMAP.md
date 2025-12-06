@@ -354,7 +354,9 @@
 
 ---
 
-## Phase 8: End-to-End Integration
+## Phase 8: End-to-End Integration (Skipped for now)
+
+**Status**: Temporarily skipped - individual components are thoroughly tested in their respective test files.
 
 ### 8.1 Full Pipeline Test
 - [ ] Create end-to-end test with tiny model and tiny dataset:
@@ -364,6 +366,7 @@
   - Export to GGUF
   - Verify GGUF output
 - [ ] Document the full workflow in README.md
+- **Note**: Training tested in `test_train_script.py`, inference in `test_inference.py`, export in `test_export.py`
 
 ### 8.2 Real Training Run
 - [ ] Prepare real dataset (placeholder/TODO for dataset source)
