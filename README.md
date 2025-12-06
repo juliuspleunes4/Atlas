@@ -1,4 +1,4 @@
-# Atlas
+# 🌍 Atlas
 
 [![Python 3.8+](https://img.shields.io/badge/python-3.8+-blue.svg)](https://www.python.org/downloads/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
@@ -9,15 +9,15 @@
 
 Atlas is a complete pipeline for building, training, and deploying decoder-only transformer language models. The project focuses on clarity, modularity, and the ability to export trained models to GGUF format for efficient inference.
 
-## Features
+## ✨ Features
 
-- **Clean Implementation**: Decoder-only transformer architecture built from scratch with PyTorch
-- **Complete Pipeline**: Training, evaluation, inference, and export all in one place
-- **GGUF Export**: Convert trained models to GGUF format for use with llama.cpp
-- **Modular Design**: Well-organized codebase with clear separation of concerns
-- **Comprehensive Testing**: Test coverage for all major components
+- **🎯 Clean Implementation**: Decoder-only transformer architecture built from scratch with PyTorchrch
+- **🔄 Complete Pipeline**: Training, evaluation, inference, and export all in one place
+- **📦 GGUF Export**: Convert trained models to GGUF format for use with llama.cpp
+- **🧩 Modular Design**: Well-organized codebase with clear separation of concerns
+- **✅ Comprehensive Testing**: Test coverage for all major components
 
-## Project Status
+## 📊 Project Status
 
 🚧 **Under active development** 🚧
 
@@ -43,15 +43,15 @@ Atlas is currently in early development. See [`docs/ROADMAP.md`](docs/ROADMAP.md
 
 **Total: 288 passing tests**
 
-## Installation
+## 🚀 Installation
 
-### Prerequisites
+### 📋 Prerequisites
 
 - Python 3.8 or higher
 - pip (Python package manager)
 - Git
 
-### Setup Instructions
+### 🔧 Setup Instructions
 
 1. **Clone the repository**
 
@@ -93,9 +93,9 @@ pip install -e .
 pytest tests/ -v
 ```
 
-## Quick Start
+## 🎯 Quick Start
 
-### Training
+### 🏋️ Training
 
 Train a model from scratch:
 
@@ -131,7 +131,7 @@ python scripts/train.py \
   --max-steps 50000
 ```
 
-### Inference
+### 💬 Inference
 
 Generate text from a trained model:
 
@@ -166,7 +166,7 @@ python scripts/infer.py \
   --do-sample
 ```
 
-### Export to GGUF
+### 📦 Export to GGUF
 
 Export trained model to GGUF format:
 
@@ -188,7 +188,7 @@ python scripts/export_gguf.py \
   --tokenizer gpt2
 ```
 
-## Project Structure
+## 📁 Project Structure
 
 ```
 Atlas/
@@ -209,7 +209,7 @@ Atlas/
 └── README.md          # This file
 ```
 
-## Architecture
+## 🏗️ Architecture
 
 Atlas implements a **decoder-only transformer** architecture (GPT-style):
 
@@ -219,9 +219,9 @@ Atlas implements a **decoder-only transformer** architecture (GPT-style):
 - **Learned positional embeddings**
 - **Weight tying** between input embeddings and output projection
 
-## Development
+## 🛠️ Development
 
-### Running Tests
+### 🧪 Running Tests
 
 Run all tests:
 ```bash
@@ -238,7 +238,7 @@ Run with coverage:
 pytest tests/ --cov=atlas --cov-report=html
 ```
 
-### Code Quality
+### 💎 Code Quality
 
 Format code:
 ```bash
@@ -260,7 +260,7 @@ Run all quality checks:
 black atlas/ tests/ scripts/ && flake8 atlas/ tests/ scripts/ && mypy atlas/ && pytest tests/ -v
 ```
 
-## Roadmap
+## 🗺️ Roadmap
 
 See [`docs/ROADMAP.md`](docs/ROADMAP.md) for the complete development plan, which includes:
 
@@ -275,11 +275,11 @@ See [`docs/ROADMAP.md`](docs/ROADMAP.md) for the complete development plan, whic
 - Phase 9: Optimization and refinement
 - Phase 10: Documentation and release
 
-## Contributing
+## 🤝 Contributing
 
 We welcome contributions to Atlas! Whether you're fixing bugs, adding features, improving documentation, or writing tests, your help is appreciated.
 
-### Getting Started
+### 🎬 Getting Started
 
 1. **Fork the repository** on GitHub
 2. **Clone your fork** locally:
@@ -293,9 +293,9 @@ We welcome contributions to Atlas! Whether you're fixing bugs, adding features, 
    git checkout -b feature/your-feature-name
    ```
 
-### Development Guidelines
+### 📝 Development Guidelines
 
-#### Code Quality
+#### 💎 Code Quality
 
 - **Format your code** with black:
   ```bash
@@ -310,7 +310,7 @@ We welcome contributions to Atlas! Whether you're fixing bugs, adding features, 
   mypy atlas/
   ```
 
-#### Testing
+#### 🧪 Testing
 
 - **Write tests** for all new features and bug fixes
 - **Run the test suite** to ensure nothing breaks:
@@ -323,7 +323,7 @@ We welcome contributions to Atlas! Whether you're fixing bugs, adding features, 
   ```
 - **Aim for >80% coverage** on new code
 
-#### Commit Guidelines
+#### 📝 Commit Guidelines
 
 - Write clear, descriptive commit messages
 - Use conventional commit format:
@@ -334,13 +334,13 @@ We welcome contributions to Atlas! Whether you're fixing bugs, adding features, 
   - `refactor:` for code refactoring
   - `chore:` for maintenance tasks
 
-#### Documentation
+#### 📚 Documentation
 
 - Update `docs/CHANGELOG.md` with your changes
 - Add docstrings to all public functions and classes
 - Update README.md if adding user-facing features
 
-### Submitting Changes
+### 🚀 Submitting Changes
 
 1. **Ensure all tests pass** and code is formatted
 2. **Commit your changes**:
@@ -355,7 +355,7 @@ We welcome contributions to Atlas! Whether you're fixing bugs, adding features, 
 4. **Create a Pull Request** on GitHub
 5. **Address review feedback** if requested
 
-### What to Contribute
+### 💡 What to Contribute
 
 Check out the [roadmap](docs/ROADMAP.md) for areas that need work:
 
@@ -365,18 +365,18 @@ Check out the [roadmap](docs/ROADMAP.md) for areas that need work:
 - 🐛 **Bug Fixes**: Check issues for known bugs
 - ✨ **Optimizations**: Performance improvements, memory efficiency
 
-### Code of Conduct
+### 🌟 Code of Conduct
 
 - Be respectful and inclusive
 - Provide constructive feedback
 - Focus on the code, not the person
 - Help others learn and grow
 
-## License
+## 📄 License
 
 See [LICENSE](LICENSE) for details.
 
-## FAQ
+## ❓ FAQ
 
 ### How do I activate the virtual environment?
 
@@ -416,7 +416,7 @@ deactivate
 3. Improve test coverage in existing modules
 4. Add documentation and examples
 
-## Acknowledgments
+## 🙏 Acknowledgments
 
 - Inspired by modern transformer architectures (GPT, LLaMA)
 - GGUF format from [ggerganov/llama.cpp](https://github.com/ggerganov/llama.cpp)
