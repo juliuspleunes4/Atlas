@@ -32,15 +32,16 @@ Atlas is currently in early development. See [`docs/ROADMAP.md`](docs/ROADMAP.md
 - ✅ Phase 5: Training Loop (56 tests)
 - ✅ Phase 5.5: Training Script (9 tests)
 - ✅ Phase 6: Inference & Generation (21 tests)
+- ✅ Phase 6.3: Inference Script (12 tests)
+- ✅ Phase 7: GGUF Export (17 tests)
 
 **In Progress:**
-- 🔄 Phase 6.3: Inference Script
+- 🔄 Phase 8: End-to-End Integration
 
 **Upcoming:**
-- Phase 7: GGUF Export
-- Phase 8-10: Advanced features
+- Phase 9-10: Advanced features and optimization
 
-**Total: 259 passing tests**
+**Total: 288 passing tests**
 
 ## Installation
 
