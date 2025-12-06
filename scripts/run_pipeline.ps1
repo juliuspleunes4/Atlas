@@ -2,7 +2,7 @@
 # Atlas Complete Training Pipeline
 # Handles everything from setup to training start
 #
-# Usage: .\scripts\start_training.ps1
+# Usage: .\scripts\run_pipeline.ps1
 
 param(
     [switch]$Help
@@ -28,7 +28,7 @@ This script handles the entire training pipeline:
 5. Starts training
 
 Usage:
-  .\scripts\start_training.ps1
+  .\scripts\run_pipeline.ps1
 
 The script will guide you through each step interactively.
 "@

@@ -81,8 +81,8 @@ Atlas provides multiple pre-configured model sizes optimized for different hardw
 
 Use the automated training script to select interactively:
 ```powershell
-.\scripts\start_training.ps1  # Windows
-./scripts/start_training.sh   # Linux/Mac
+.\scripts\run_pipeline.ps1  # Windows
+./scripts/run_pipeline.sh   # Linux/Mac
 ```
 
 Or specify directly:
@@ -157,11 +157,11 @@ pytest tests/ -v
 4. **Run the training pipeline**:
    ```powershell
    # Windows
-   .\scripts\start_training.ps1
+   .\scripts\run_pipeline.ps1
    
    # Linux/Mac
-   chmod +x scripts/start_training.sh
-   ./scripts/start_training.sh
+   chmod +x scripts/run_pipeline.sh
+   ./scripts/run_pipeline.sh
    ```
 
 That's it! The script handles everything else automatically.
@@ -192,13 +192,13 @@ If you prefer manual control:
 
 **Windows:**
 ```powershell
-.\scripts\start_training.ps1
+.\scripts\run_pipeline.ps1
 ```
 
 **Linux/Mac:**
 ```bash
-chmod +x scripts/start_training.sh
-./scripts/start_training.sh
+chmod +x scripts/run_pipeline.sh
+./scripts/run_pipeline.sh
 ```
 
 This interactive script will:

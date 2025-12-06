@@ -2,7 +2,7 @@
 # Atlas Complete Training Pipeline
 # Handles everything from setup to training start
 #
-# Usage: ./scripts/start_training.sh
+# Usage: ./scripts/run_pipeline.sh
 
 set -e  # Exit on error
 
@@ -33,7 +33,7 @@ This script handles the entire training pipeline:
 5. Starts training
 
 Usage:
-  ./scripts/start_training.sh
+  ./scripts/run_pipeline.sh
 
 The script will guide you through each step interactively.
 EOF

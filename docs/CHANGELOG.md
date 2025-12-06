@@ -4,6 +4,33 @@ All notable changes to Atlas will be documented in this file.
 
 ---
 
+## 2025-12-06 - Renamed Training Scripts and Removed Obsolete Files
+
+**Changed**:
+- Renamed `start_training.ps1/.sh` → `run_pipeline.ps1/.sh`
+  - Better reflects that it handles the complete pipeline, not just training start
+  - Updated all references in README.md, data/README.md, scripts/README.md, and CHANGELOG.md
+- Removed obsolete `scripts/config_example.yaml`
+  - Superseded by proper configuration files in `configs/` directory (tiny, small, default, large)
+  - Removed references from documentation
+
+## 2025-12-06 - Codebase Cleanup and Documentation Updates
+
+- **Removed redundant automation scripts**:
+  - Deleted `scripts/setup_and_train.ps1` and `scripts/setup_and_train.sh`
+  - These were redundant with the more comprehensive `run_pipeline.ps1/.sh` scripts
+  - Cleaner script structure with single automation entry point
+- **Updated documentation**:
+  - Expanded `scripts/README.md` with comprehensive script documentation
+    - Main Scripts: run_pipeline.ps1/.sh with interactive configuration menu
+    - Core Scripts: train.py, infer.py, export_gguf.py, prepare_data.py
+    - Usage examples and configuration guidance for each script
+  - Updated `data/README.md`:
+    - References corrected from `setup_and_train` to `run_pipeline`
+    - Added configuration selection guidance (TINY/SMALL/DEFAULT/LARGE)
+    - Shows VRAM requirements for each preset
+    - Manual training command examples
+
 ## 2025-12-06 - Add Lightweight Training Config and Fix Batch Format
 
 - **New TINY configuration** (`configs/tiny.yaml`):
@@ -12,7 +39,7 @@ All notable changes to Atlas will be documented in this file.
   - Shorter sequences (512 tokens) and smaller batches (4)
   - 8 layers, 512 hidden size, 8 attention heads
   - Fast training for quick iteration and debugging
-- **Updated training pipeline** (`scripts/start_training.ps1`):
+- **Updated training pipeline** (`scripts/run_pipeline.ps1`):
   - Added TINY option to GPU configuration menu (option 1)
   - Now offers 4 presets: TINY, SMALL, DEFAULT, LARGE
   - Users can choose based on available GPU memory
@@ -36,7 +63,7 @@ All notable changes to Atlas will be documented in this file.
 
 ## 2025-12-06 - Complete Training Pipeline and GPU-Optimized Configs
 
-- **Complete training pipeline** (`scripts/start_training.ps1` / `.sh`):
+- **Complete training pipeline** (`scripts/run_pipeline.ps1` / `.sh`):
   - **Zero-friction onboarding**: Handles entire pipeline from clone to training
   - Interactive prompts for all decisions (GPU config, data prep, etc.)
   - Automatically checks and installs Atlas package (`pip install -e .`)
@@ -69,7 +96,7 @@ All notable changes to Atlas will be documented in this file.
   - Clear instructions for automated vs manual workflows
   - Updated data/README.md with usage examples
 - **Developer experience highlights**:
-  - **One command from zero to training**: `.\scripts\start_training.ps1`
+  - **One command from zero to training**: `.\scripts\run_pipeline.ps1`
   - Handles missing dependencies, data, configs automatically
   - Interactive prompts guide users through choices
   - Comprehensive error messages with next steps
@@ -185,12 +212,6 @@ All notable changes to Atlas will be documented in this file.
   - Support for multiple data files (comma-separated paths)
   - Emergency checkpoint on exceptions
   - Resume training from checkpoint with `--resume`
-- **Configuration example** (`scripts/config_example.yaml`):
-  - Sample YAML config with all training parameters
-  - Model architecture settings (vocab size, layers, heads, etc.)
-  - Training hyperparameters (LR, batch size, scheduler)
-  - Data settings (max sequence length, num workers)
-  - Checkpointing configuration
 - **Testing** (`tests/test_train_script.py`):
   - Added 9 tests for training script functionality
   - Test config loading, model creation, dataset creation

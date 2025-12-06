@@ -42,10 +42,10 @@ data/
 
 ```powershell
 # Windows
-.\scripts\setup_and_train.ps1
+.\scripts\run_pipeline.ps1
 
 # Linux/Mac
-./scripts/setup_and_train.sh
+./scripts/run_pipeline.sh
 ```
 
 This handles everything: data prep, training, logging.
@@ -81,12 +81,19 @@ This handles everything: data prep, training, logging.
 python scripts/prepare_data.py \
   --input data/raw/archive.zip \
   --output data/processed/my_wiki
+```
 
-# Skip data prep (already done)
-.\scripts\setup_and_train.ps1 -SkipPrep
+**Training configurations:**
 
-# Custom config
-.\scripts\setup_and_train.ps1 -Config configs/large.yaml
+Use `run_pipeline.ps1/.sh` interactive menu to select from:
+- **TINY** (40M params, 4-6GB VRAM)
+- **SMALL** (124M params, 8-10GB VRAM)  
+- **DEFAULT** (350M params, 12-16GB VRAM)
+- **LARGE** (500M params, 24-32GB VRAM)
+
+Or run manually:
+```bash
+python scripts/train.py --config configs/tiny.yaml
 ```
 
 ## Notes
