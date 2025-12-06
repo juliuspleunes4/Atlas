@@ -4,6 +4,26 @@ All notable changes to Atlas will be documented in this file.
 
 ---
 
+## 2025-12-06 - Training utilities (Phase 5, Task 1)
+
+- Implemented loss functions and optimizer utilities for training
+- **Loss functions** (`atlas/training/loss.py`):
+  - `compute_lm_loss()`: Cross-entropy loss for language modeling
+  - `compute_lm_loss_with_logits_shift()`: Automatic shifting for next-token prediction
+  - `compute_perplexity()`: Convert loss to perplexity metric
+  - Support for ignore_index (padding), multiple reduction modes
+- **Optimizer utilities** (`atlas/training/optimizer.py`):
+  - `create_optimizer()`: AdamW with selective weight decay
+  - `create_scheduler()`: LR scheduler with warmup and decay (cosine/linear/constant)
+  - `get_optimizer_state()`: Optimizer state inspection
+  - `clip_gradients()`: Gradient clipping by global norm
+  - Excludes biases and LayerNorm from weight decay (best practice)
+- **Tests**: Added 27 comprehensive tests covering:
+  - Loss computation with various reduction modes (11 tests)
+  - Optimizer creation and parameter grouping (7 tests)
+  - Scheduler warmup and decay schedules (9 tests)
+- All 27 tests passing
+
 ## 2025-12-06 - Data Pipeline complete (Phase 4)
 
 - Implemented complete data loading and preprocessing pipeline for training
