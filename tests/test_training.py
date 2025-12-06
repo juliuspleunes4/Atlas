@@ -313,9 +313,9 @@ class TestScheduler:
         
         lrs = []
         for _ in range(100):
+            optimizer.step()
             scheduler.step()
             lrs.append(optimizer.param_groups[0]['lr'])
-            optimizer.step()
         
         # LR should increase during warmup
         assert lrs[0] < lrs[50] < lrs[99]
@@ -336,8 +336,8 @@ class TestScheduler:
         
         # Run through all steps
         for _ in range(1000):
-            scheduler.step()
             optimizer.step()
+            scheduler.step()
         
         final_lr = optimizer.param_groups[0]['lr']
         
@@ -359,8 +359,8 @@ class TestScheduler:
         
         # Run through all steps
         for _ in range(1000):
-            scheduler.step()
             optimizer.step()
+            scheduler.step()
         
         final_lr = optimizer.param_groups[0]['lr']
         
@@ -381,15 +381,15 @@ class TestScheduler:
         
         # Skip warmup
         for _ in range(100):
-            scheduler.step()
             optimizer.step()
+            scheduler.step()
         
         # LR should be constant after warmup
         lr_at_100 = optimizer.param_groups[0]['lr']
         
         for _ in range(100):
-            scheduler.step()
             optimizer.step()
+            scheduler.step()
         
         lr_at_200 = optimizer.param_groups[0]['lr']
         
@@ -409,8 +409,8 @@ class TestScheduler:
         
         # After 100 steps (warmup), should be at full LR
         for _ in range(100):
-            scheduler.step()
             optimizer.step()
+            scheduler.step()
         
         lr_after_warmup = optimizer.param_groups[0]['lr']
         assert abs(lr_after_warmup - initial_lr) < 1e-4
