@@ -216,6 +216,7 @@ Copilot should **never**:
 - Start additional large tasks without user direction.
 - Restructure the entire codebase unprompted.
 - Generate standalone markdown reports of what it did.
+- Include emoji's in non-markdown files. Always use ASCII style in code.
 
 ---
 
