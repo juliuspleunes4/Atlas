@@ -140,6 +140,18 @@ Train a model step-by-step:
 # 1. Prepare data (if not done already)
 python scripts/prepare_data.py --input data/raw/archive.zip
 
+# This will:
+# - Extract archive.zip to data/processed/wikipedia/
+# - Organize text files with clean naming (wiki_00000.txt, wiki_00001.txt, ...)
+# - Display statistics (file count, total size)
+# - Ready in seconds!
+
+# Optional: List available datasets
+python scripts/prepare_data.py --list
+
+# Optional: Custom output directory
+python scripts/prepare_data.py --input data/raw/archive.zip --output data/processed/my_wiki
+
 # 2. Train the model
 python scripts/train.py --config configs/default.yaml
 ```
@@ -160,6 +172,22 @@ python scripts/train.py \
   --learning-rate 1e-3 \
   --batch-size 16 \
   --max-steps 50000
+```
+
+**Data Preparation Options:**
+
+```bash
+# Show help
+python scripts/prepare_data.py --help
+
+# List available raw and processed datasets
+python scripts/prepare_data.py --list
+
+# Prepare with default output (data/processed/wikipedia/)
+python scripts/prepare_data.py --input data/raw/archive.zip
+
+# Prepare with custom output directory
+python scripts/prepare_data.py --input data/raw/archive.zip --output data/processed/custom_name
 ```
 
 ### 💬 Inference
