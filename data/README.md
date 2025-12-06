@@ -36,21 +36,58 @@ data/
 
 ## Usage
 
+### Quick Start (Automated)
+
+**One command to rule them all:**
+
+```powershell
+# Windows
+.\scripts\setup_and_train.ps1
+
+# Linux/Mac
+./scripts/setup_and_train.sh
+```
+
+This handles everything: data prep, training, logging.
+
+### Manual Steps
+
 1. **Place raw data**: 
    ```
    data/raw/archive.zip
    ```
 
-2. **Extract data** (TODO: create extraction script):
+2. **Prepare data**:
    ```bash
-   # Will extract to data/processed/wikipedia/
    python scripts/prepare_data.py --input data/raw/archive.zip
    ```
+   
+   Output: `data/processed/wikipedia/` with organized text files
 
-3. **Train with data**:
+3. **Verify prepared data**:
    ```bash
-   python scripts/train.py --config configs/default.yaml --data data/processed/wikipedia/
+   python scripts/prepare_data.py --list
    ```
+
+4. **Train**:
+   ```bash
+   python scripts/train.py --config configs/default.yaml
+   ```
+
+### Advanced Options
+
+```bash
+# Custom output directory
+python scripts/prepare_data.py \
+  --input data/raw/archive.zip \
+  --output data/processed/my_wiki
+
+# Skip data prep (already done)
+.\scripts\setup_and_train.ps1 -SkipPrep
+
+# Custom config
+.\scripts\setup_and_train.ps1 -Config configs/large.yaml
+```
 
 ## Notes
 

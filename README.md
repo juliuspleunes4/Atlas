@@ -95,37 +95,68 @@ pytest tests/ -v
 
 ## 🎯 Quick Start
 
-### 🏋️ Training
+### 📦 Get Training Data
 
-Train a model from scratch:
+1. **Download Wikipedia SimpleEnglish dataset** from [Kaggle](https://www.kaggle.com/datasets/ffatty/plaintext-wikipedia-simpleenglish)
+
+2. **Place the zip file** in `data/raw/`:
+   ```
+   Atlas/data/raw/archive.zip
+   ```
+
+3. **Prepare the data**:
+   ```bash
+   python scripts/prepare_data.py --input data/raw/archive.zip
+   ```
+
+   This extracts and organizes 249K articles (~400MB) into `data/processed/wikipedia/`.
+
+### 🚀 One-Command Setup & Training
+
+The easiest way to get started:
+
+**Windows:**
+```powershell
+.\scripts\setup_and_train.ps1
+```
+
+**Linux/Mac:**
+```bash
+chmod +x scripts/setup_and_train.sh
+./scripts/setup_and_train.sh
+```
+
+This automatically:
+- ✅ Checks Python and dependencies
+- ✅ Prepares training data (if not already done)
+- ✅ Launches training with default config
+- ✅ Logs everything to console and `training.log`
+
+### 🏋️ Manual Training
+
+Train a model step-by-step:
 
 ```bash
-python scripts/train.py \
-  --config scripts/config_example.yaml \
-  --train-data data/train.txt \
-  --val-data data/val.txt \
-  --output-dir checkpoints/my_model \
-  --eval-interval 1000 \
-  --save-interval 1000 \
-  --log-interval 100
+# 1. Prepare data (if not done already)
+python scripts/prepare_data.py --input data/raw/archive.zip
+
+# 2. Train the model
+python scripts/train.py --config configs/default.yaml
 ```
 
 Resume training from a checkpoint:
 
 ```bash
 python scripts/train.py \
-  --config scripts/config_example.yaml \
-  --train-data data/train.txt \
-  --val-data data/val.txt \
-  --resume checkpoints/my_model/checkpoint_step_5000.pt
+  --config configs/default.yaml \
+  --resume checkpoints/checkpoint_step_5000.pt
 ```
 
 Override config parameters from CLI:
 
 ```bash
 python scripts/train.py \
-  --config scripts/config_example.yaml \
-  --train-data data/train.txt \
+  --config configs/default.yaml \
   --learning-rate 1e-3 \
   --batch-size 16 \
   --max-steps 50000

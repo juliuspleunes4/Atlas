@@ -4,6 +4,33 @@ All notable changes to Atlas will be documented in this file.
 
 ---
 
+## 2025-12-06 - Data Preparation Pipeline and Automation Scripts
+
+- **Data preparation script** (`scripts/prepare_data.py`):
+  - Automatic extraction of Wikipedia SimpleEnglish dataset from zip
+  - Organizes text files with clean naming convention
+  - Displays statistics (file count, total size)
+  - `--list` flag to show available datasets
+  - Cross-platform (Windows/Linux/Mac)
+- **One-command automation scripts**:
+  - `scripts/setup_and_train.ps1` for Windows PowerShell
+  - `scripts/setup_and_train.sh` for Linux/Mac bash
+  - Automatically checks prerequisites (Python, venv, dependencies)
+  - Auto-prepares data if not already done
+  - Launches training with progress tracking
+  - Colored output and clear status messages
+- **Documentation updates**:
+  - Updated README.md with Quick Start section
+  - Updated data/README.md with usage examples
+  - Clear instructions for one-command vs manual workflows
+- **Developer experience**:
+  - Drop zip in `data/raw/archive.zip`
+  - Run `.\scripts\setup_and_train.ps1` (Windows) or `./scripts/setup_and_train.sh` (Linux/Mac)
+  - Everything automated from data prep to training
+- **Code quality**:
+  - Removed emojis from all scripts to prevent mojibake issues
+  - Replaced with ASCII tags: [INFO], [SUCCESS], [ERROR], [WARNING]
+
 ## 2025-12-06 - Enhanced Training CLI and Logging
 
 - **Comprehensive logging system** for training script:
