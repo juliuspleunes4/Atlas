@@ -4,6 +4,33 @@ All notable changes to Atlas will be documented in this file.
 
 ---
 
+## 2025-12-06 - Training script (Phase 5.5)
+
+- Implemented production-ready training script for end-to-end model training
+- **Training script** (`scripts/train.py`):
+  - Complete command-line interface using argparse
+  - YAML configuration file parsing
+  - Model, tokenizer, dataset, optimizer initialization from config
+  - Training loop with checkpointing and evaluation
+  - Graceful interrupt handling (Ctrl+C saves checkpoint)
+  - CLI argument overrides for key parameters
+  - Progress tracking with logging
+  - Automatic device selection (CUDA/CPU)
+  - Support for multiple data files (comma-separated paths)
+  - Emergency checkpoint on exceptions
+  - Resume training from checkpoint with `--resume`
+- **Configuration example** (`scripts/config_example.yaml`):
+  - Sample YAML config with all training parameters
+  - Model architecture settings (vocab size, layers, heads, etc.)
+  - Training hyperparameters (LR, batch size, scheduler)
+  - Data settings (max sequence length, num workers)
+  - Checkpointing configuration
+- **Testing** (`tests/test_train_script.py`):
+  - Added 9 tests for training script functionality
+  - Test config loading, model creation, dataset creation
+  - Test CLI override behavior, device selection
+  - All 259 tests passing (9 training script tests)
+
 ## 2025-12-06 - Inference and text generation (Phase 6)
 
 - Implemented autoregressive text generation with multiple sampling strategies

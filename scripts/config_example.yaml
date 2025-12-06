@@ -1,0 +1,51 @@
+# Example training configuration for Atlas LLM
+# Copy and modify this file for your training runs
+
+# Model architecture
+model:
+  vocab_size: 50261  # GPT-2 vocab size (required for tiktoken)
+  max_seq_len: 1024  # Maximum sequence length
+  hidden_size: 768   # Hidden dimension
+  num_layers: 12     # Number of transformer layers
+  num_heads: 12      # Number of attention heads
+  mlp_ratio: 4.0     # MLP expansion ratio
+  dropout: 0.1       # Dropout probability
+
+# Tokenizer settings
+tokenizer:
+  name: "gpt2"       # Tokenizer name (uses tiktoken)
+  encoding: "gpt2"   # Encoding name (gpt2, cl100k_base, etc.)
+
+# Data settings
+data:
+  max_seq_len: 1024  # Must match model.max_seq_len
+  num_workers: 0     # Number of dataloader workers (0 = main process)
+
+# Training hyperparameters
+training:
+  # Optimization
+  learning_rate: 6.0e-4      # Peak learning rate
+  weight_decay: 0.01         # Weight decay coefficient
+  max_grad_norm: 1.0         # Gradient clipping norm
+  
+  # Batch sizes
+  batch_size: 8              # Batch size per device
+  gradient_accumulation_steps: 1  # Gradient accumulation
+  
+  # Schedule
+  max_steps: 10000           # Total training steps
+  warmup_steps: 1000         # Warmup steps
+  scheduler_type: "cosine"   # LR scheduler (cosine, linear, constant)
+  
+  # Checkpointing
+  keep_checkpoints: 3        # Number of checkpoints to keep
+
+# Example usage:
+# python scripts/train.py \
+#   --config scripts/config_example.yaml \
+#   --train-data data/train.txt \
+#   --val-data data/val.txt \
+#   --output-dir checkpoints/my_model \
+#   --eval-interval 1000 \
+#   --save-interval 1000 \
+#   --log-interval 100

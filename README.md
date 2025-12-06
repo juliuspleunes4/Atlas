@@ -25,17 +25,22 @@ Atlas is currently in early development. See [`docs/ROADMAP.md`](docs/ROADMAP.md
 
 **Completed:**
 - ✅ Phase 0: Project Foundation
-- ✅ Phase 1: Configuration System (with 32 passing tests)
+- ✅ Phase 1: Configuration System (32 tests)
+- ✅ Phase 2: Tokenizer Integration (27 tests)
+- ✅ Phase 3: Model Architecture (42 tests)
+- ✅ Phase 4: Data Pipeline (72 tests)
+- ✅ Phase 5: Training Loop (56 tests)
+- ✅ Phase 5.5: Training Script (9 tests)
+- ✅ Phase 6: Inference & Generation (21 tests)
 
 **In Progress:**
-- 🔄 Phase 2: Tokenizer Integration
+- 🔄 Phase 6.3: Inference Script
 
 **Upcoming:**
-- Phase 3: Model Architecture
-- Phase 4: Data Pipeline
-- Phase 5: Training Loop
-- Phase 6: Inference & Generation
 - Phase 7: GGUF Export
+- Phase 8-10: Advanced features
+
+**Total: 259 passing tests**
 
 ## Installation
 
@@ -89,13 +94,40 @@ pytest tests/ -v
 
 ## Quick Start
 
-> **Note**: The following examples are placeholders for future functionality.
-
 ### Training
 
+Train a model from scratch:
+
 ```bash
-# Train a model (TODO: implementation pending)
-python scripts/train.py --config configs/small.yaml
+python scripts/train.py \
+  --config scripts/config_example.yaml \
+  --train-data data/train.txt \
+  --val-data data/val.txt \
+  --output-dir checkpoints/my_model \
+  --eval-interval 1000 \
+  --save-interval 1000 \
+  --log-interval 100
+```
+
+Resume training from a checkpoint:
+
+```bash
+python scripts/train.py \
+  --config scripts/config_example.yaml \
+  --train-data data/train.txt \
+  --val-data data/val.txt \
+  --resume checkpoints/my_model/checkpoint_step_5000.pt
+```
+
+Override config parameters from CLI:
+
+```bash
+python scripts/train.py \
+  --config scripts/config_example.yaml \
+  --train-data data/train.txt \
+  --learning-rate 1e-3 \
+  --batch-size 16 \
+  --max-steps 50000
 ```
 
 ### Inference

@@ -278,13 +278,13 @@
 - [x] Test LR scheduler correctness (warmup → decay)
 - [x] Test evaluation loop
 
-### 5.5 Training Script
-- [ ] Create `scripts/train.py`:
+### 5.5 Training Script ✅
+- [x] Create `scripts/train.py`:
   - Parse config file
   - Initialize model, tokenizer, dataset, optimizer
   - Run training loop
   - Handle interruptions gracefully (Ctrl+C)
-- [ ] Add CLI arguments for config overrides
+- [x] Add CLI arguments for config overrides
 
 ---
 
