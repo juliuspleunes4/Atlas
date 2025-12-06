@@ -132,9 +132,37 @@ python scripts/train.py \
 
 ### Inference
 
+Generate text from a trained model:
+
 ```bash
-# Generate text (TODO: implementation pending)
-python scripts/infer.py --checkpoint checkpoints/model.pt --prompt "Once upon a time"
+# Single prompt
+python scripts/infer.py \
+  --checkpoint checkpoints/my_model/checkpoint_step_10000.pt \
+  --prompt "Once upon a time" \
+  --max-new-tokens 100 \
+  --temperature 0.8 \
+  --top-k 40 \
+  --do-sample
+```
+
+Interactive mode:
+
+```bash
+python scripts/infer.py \
+  --checkpoint checkpoints/my_model/best_model.pt \
+  --interactive
+```
+
+Batch generation from file:
+
+```bash
+python scripts/infer.py \
+  --checkpoint checkpoints/my_model/best_model.pt \
+  --prompts-file prompts.txt \
+  --output-file generated.txt \
+  --temperature 0.9 \
+  --top-p 0.95 \
+  --do-sample
 ```
 
 ### Export to GGUF

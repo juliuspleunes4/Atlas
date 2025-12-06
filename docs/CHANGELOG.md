@@ -4,6 +4,27 @@ All notable changes to Atlas will be documented in this file.
 
 ---
 
+## 2025-12-06 - Inference script (Phase 6.3)
+
+- Implemented production-ready inference script for text generation
+- **Inference script** (`scripts/infer.py`):
+  - Complete command-line interface for text generation
+  - Multiple input modes: single prompt, prompts file, interactive
+  - Configurable sampling parameters (temperature, top-k, top-p)
+  - Greedy vs sampling decoding modes
+  - Checkpoint loading with config inference
+  - Batch generation from file (one prompt per line)
+  - Interactive mode with prompt loop
+  - Output to file or stdout
+  - Separator customization for multiple generations
+  - Device selection (CUDA/CPU)
+  - Graceful error handling
+- **Testing** (`tests/test_infer_script.py`):
+  - Added 12 comprehensive tests for inference script
+  - Test prompts loading, checkpoint loading, config validation
+  - Test output formatting, file I/O
+  - All 271 tests passing (12 inference script tests)
+
 ## 2025-12-06 - Training script (Phase 5.5)
 
 - Implemented production-ready training script for end-to-end model training

@@ -312,13 +312,13 @@
 - [x] Test stopping conditions (max length, EOS)
 - [x] Test generation with various temperatures
 
-### 6.3 Inference Script
-- [ ] Create `scripts/infer.py`:
+### 6.3 Inference Script ✅
+- [x] Create `scripts/infer.py`:
   - Load model from checkpoint
   - Load tokenizer
   - Accept prompt from CLI or stdin
   - Generate and print response
-- [ ] Add CLI arguments for generation parameters (temperature, top_k, etc.)
+- [x] Add CLI arguments for generation parameters (temperature, top_k, etc.)
 
 ---
 
