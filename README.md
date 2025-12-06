@@ -29,7 +29,7 @@ Atlas is currently in early development. See [`docs/ROADMAP.md`](docs/ROADMAP.md
 - ✅ Phase 2: Tokenizer Integration (27 tests)
 - ✅ Phase 3: Model Architecture (51 tests - **+9 gradient checkpointing tests**)
 - ✅ Phase 4: Data Pipeline (72 tests)
-- ✅ Phase 5: Training Loop (56 tests)
+- ✅ Phase 5: Training Loop (62 tests - **+6 auto-resume tests**)
 - ✅ Phase 5.5: Training Script (13 tests)
 - ✅ Phase 6: Inference & Generation (21 tests)
 - ✅ Phase 6.3: Inference Script (12 tests)
@@ -41,7 +41,7 @@ Atlas is currently in early development. See [`docs/ROADMAP.md`](docs/ROADMAP.md
 **Upcoming:**
 - Phase 9-10: Advanced features and optimization
 
-**Total: 301 passing tests**
+**Total: 307 passing tests** ✨
 
 ## ⚙️ Model Configurations
 
@@ -192,6 +192,33 @@ chmod +x scripts/run_pipeline.sh
 - ✅ Start training with your selected configuration
 
 The script handles everything else automatically and guides you through each step!
+
+### 🔄 Checkpoint Auto-Resume
+
+Atlas automatically detects existing checkpoints and asks if you want to resume training:
+
+```
+┌──────────────────────────────────────────────────────┐
+│  Checkpoint found: checkpoints/atlas_step_500.pt     │
+│  Step: 500                                           │
+│  Epoch: 1                                            │
+│  Loss: 3.456                                         │
+└──────────────────────────────────────────────────────┘
+
+Resume from checkpoint? (y/n):
+```
+
+- **Choose "y"**: Continue training from the checkpoint (preserves optimizer state, learning rate, etc.)
+- **Choose "n"**: Start a fresh training session (existing checkpoints remain untouched)
+
+This works in:
+- Interactive pipeline scripts (`run_pipeline.ps1`, `run_pipeline.sh`)
+- Direct training script (`python scripts/train.py`)
+
+To bypass the prompt and force resumption:
+```bash
+python scripts/train.py --config configs/default.yaml --resume checkpoints/atlas_step_500.pt
+```
 
 ---
 

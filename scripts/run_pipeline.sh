@@ -197,6 +197,62 @@ fi
 
 # Step 7: Display training information
 step "Training Configuration Summary"
+# Step 7: Check for existing checkpoints
+step "Checking for existing checkpoints..."
+CHECKPOINT_DIR="checkpoints"
+RESUME_FLAG=""
+
+if [ -d "$CHECKPOINT_DIR" ]; then
+    # Find latest checkpoint (exclude best checkpoint)
+    LATEST_CHECKPOINT=$(find "$CHECKPOINT_DIR" -name "atlas_*.pt" ! -name "*best*" -type f -printf '%T@ %p\n' 2>/dev/null | sort -nr | head -n1 | cut -d' ' -f2-)
+    
+    if [ -n "$LATEST_CHECKPOINT" ]; then
+        CHECKPOINT_JSON="${LATEST_CHECKPOINT%.pt}.json"
+        
+        echo ""
+        echo -e "${YELLOW}╔════════════════════════════════════════════════════════════════════════════╗${NC}"
+        echo -e "${YELLOW}║                   EXISTING CHECKPOINT DETECTED                             ║${NC}"
+        echo -e "${YELLOW}╚════════════════════════════════════════════════════════════════════════════╝${NC}"
+        echo ""
+        echo -e "${CYAN}Found checkpoint: ${NC}$(basename "$LATEST_CHECKPOINT")"
+        
+        if [ -f "$CHECKPOINT_JSON" ]; then
+            STEP=$(jq -r '.step // "unknown"' "$CHECKPOINT_JSON" 2>/dev/null || echo "unknown")
+            EPOCH=$(jq -r '.epoch // "unknown"' "$CHECKPOINT_JSON" 2>/dev/null || echo "unknown")
+            LOSS=$(jq -r '.loss // "unknown"' "$CHECKPOINT_JSON" 2>/dev/null || echo "unknown")
+            PPL=$(jq -r '.perplexity // "unknown"' "$CHECKPOINT_JSON" 2>/dev/null || echo "unknown")
+            
+            echo -e "  ${GRAY}Step: ${NC}$STEP"
+            echo -e "  ${GRAY}Epoch: ${NC}$EPOCH"
+            [ "$LOSS" != "unknown" ] && echo -e "  ${GRAY}Loss: ${NC}$(printf "%.4f" "$LOSS" 2>/dev/null || echo "$LOSS")"
+            [ "$PPL" != "unknown" ] && echo -e "  ${GRAY}Perplexity: ${NC}$(printf "%.2f" "$PPL" 2>/dev/null || echo "$PPL")"
+        fi
+        echo ""
+        
+        while true; do
+            read -p "Resume from this checkpoint? (y/n): " RESUME_RESPONSE
+            RESUME_RESPONSE=$(echo "$RESUME_RESPONSE" | tr '[:upper:]' '[:lower:]' | tr -d '[:space:]')
+            
+            if [ "$RESUME_RESPONSE" = "y" ]; then
+                success "Will resume from checkpoint"
+                RESUME_FLAG="--resume \"$LATEST_CHECKPOINT\""
+                break
+            elif [ "$RESUME_RESPONSE" = "n" ]; then
+                info "Starting fresh training session"
+                break
+            else
+                echo "Please enter 'y' or 'n'"
+            fi
+        done
+        echo ""
+    else
+        info "No checkpoints found - starting fresh"
+    fi
+else
+    info "No checkpoint directory found - starting fresh"
+fi
+
+# Step 8: Display training information
 cat << EOF
 
 Configuration: $CONFIG_NAME
@@ -220,7 +276,7 @@ if [[ $REPLY =~ ^[Nn]$ ]]; then
     exit 0
 fi
 
-# Step 8: Start training
+# Step 9: Start training
 step "Starting Training..."
 echo -e "${GREEN}
 ================================================================================
@@ -228,7 +284,11 @@ TRAINING STARTED
 ================================================================================
 ${NC}"
 
-python scripts/train.py --config "$CONFIG_FILE" --train-data "$PROCESSED_DIR"
+if [ -n "$RESUME_FLAG" ]; then
+    eval python scripts/train.py --config \"$CONFIG_FILE\" --train-data \"$PROCESSED_DIR\" $RESUME_FLAG
+else
+    python scripts/train.py --config "$CONFIG_FILE" --train-data "$PROCESSED_DIR"
+fi
 
 # Check result
 if [ $? -eq 0 ]; then

@@ -286,6 +286,46 @@ class CheckpointManager:
             if json_path.exists():
                 json_path.unlink()
     
+    def find_latest_checkpoint(self) -> Optional[Path]:
+        """
+        Find the most recent checkpoint file.
+        
+        Returns:
+            Path to latest checkpoint, or None if no checkpoints exist
+        """
+        # Find all checkpoint files (both step and epoch)
+        checkpoints = list(self.checkpoint_dir.glob(f'{self.model_name}_*.pt'))
+        
+        # Exclude best checkpoint (handled separately)
+        checkpoints = [p for p in checkpoints if 'best' not in p.name]
+        
+        if not checkpoints:
+            return None
+        
+        # Sort by modification time (most recent first)
+        latest_checkpoint = max(checkpoints, key=lambda p: p.stat().st_mtime)
+        
+        return latest_checkpoint
+    
+    def get_checkpoint_info(self, checkpoint_path: Path) -> Optional[Dict[str, Any]]:
+        """
+        Get metadata about a checkpoint without loading it.
+        
+        Args:
+            checkpoint_path: Path to checkpoint file
+            
+        Returns:
+            Dictionary with checkpoint info, or None if metadata not found
+        """
+        json_path = checkpoint_path.with_suffix('.json')
+        
+        if json_path.exists():
+            with open(json_path, 'r') as f:
+                metadata = json.load(f)
+            return metadata
+        
+        return None
+    
     def list_checkpoints(self) -> list[Dict[str, Any]]:
         """
         List all available checkpoints with their metadata.

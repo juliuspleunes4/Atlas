@@ -323,7 +323,38 @@ def main():
     # Parse arguments
     args = parse_args()
     
-    # Setup logging first
+    # Check for existing checkpoints and prompt user if not explicitly resuming
+    checkpoint_manager_temp = CheckpointManager(args.output_dir)
+    latest_checkpoint = checkpoint_manager_temp.find_latest_checkpoint()
+    
+    if latest_checkpoint and not args.resume:
+        # Found checkpoint but user didn't specify --resume
+        checkpoint_info = checkpoint_manager_temp.get_checkpoint_info(latest_checkpoint)
+        
+        print("\n" + "=" * 80)
+        print("EXISTING CHECKPOINT DETECTED")
+        print("=" * 80)
+        print(f"Found checkpoint: {latest_checkpoint.name}")
+        if checkpoint_info:
+            print(f"  Step: {checkpoint_info.get('step', 'unknown')}")
+            print(f"  Epoch: {checkpoint_info.get('epoch', 'unknown')}")
+            print(f"  Loss: {checkpoint_info.get('loss', 'unknown'):.4f}" if checkpoint_info.get('loss') else "  Loss: unknown")
+            print(f"  Perplexity: {checkpoint_info.get('perplexity', 'unknown'):.2f}" if checkpoint_info.get('perplexity') else "  Perplexity: unknown")
+        print("=" * 80)
+        
+        while True:
+            response = input("\nResume from checkpoint? (y/n): ").strip().lower()
+            if response in ['y', 'yes']:
+                args.resume = str(latest_checkpoint)
+                print(f"[+] Will resume from {latest_checkpoint.name}\n")
+                break
+            elif response in ['n', 'no']:
+                print("[-] Starting fresh training session\n")
+                break
+            else:
+                print("Please enter 'y' or 'n'")
+    
+    # Setup logging
     logger = setup_logging(args.output_dir, args.resume)
     
     logger.info("=" * 80)

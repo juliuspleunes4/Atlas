@@ -4,6 +4,64 @@ All notable changes to Atlas will be documented in this file.
 
 ---
 
+## 2025-12-06 - Automatic Checkpoint Resume with Interactive Prompts
+
+**Added**:
+- **Auto-resume functionality** for seamless training continuation
+  - Automatically detects existing checkpoints when starting training
+  - Interactive prompt asks user to resume or start fresh
+  - Works in both `train.py` script and pipeline scripts
+  - Displays checkpoint info (step, epoch, loss, perplexity) before prompting
+  
+- **New CheckpointManager methods**:
+  - `find_latest_checkpoint()`: Finds most recent checkpoint (excludes best checkpoint)
+  - `get_checkpoint_info(path)`: Retrieves metadata without loading full checkpoint
+  - Both support step-based and epoch-based checkpoints
+  
+- **Interactive pipeline improvements**:
+  - `run_pipeline.ps1` (PowerShell): Colored prompt with checkpoint details
+  - `run_pipeline.sh` (Bash): Checkpoint detection with JSON metadata parsing
+  - User-friendly y/n prompts with input validation
+
+- **New tests for auto-resume** (6 new tests, total: 307 passing)
+  - `test_find_latest_checkpoint_empty_dir`: Handles empty checkpoint directory
+  - `test_find_latest_checkpoint`: Finds most recent by timestamp
+  - `test_find_latest_checkpoint_excludes_best`: Correctly excludes best.pt
+  - `test_get_checkpoint_info`: Retrieves metadata without loading model
+  - `test_get_checkpoint_info_no_metadata`: Handles missing JSON gracefully
+  - `test_find_latest_with_epoch_checkpoints`: Works with both step and epoch checkpoints
+
+**How It Works**:
+1. Start training: `python scripts/train.py --config configs/ultra.yaml --train-data data/processed/wikipedia`
+2. If checkpoint exists, you see:
+   ```
+   ╔════════════════════════════════════════════════════════════════════════════╗
+   ║                   EXISTING CHECKPOINT DETECTED                             ║
+   ╚════════════════════════════════════════════════════════════════════════════╝
+   
+   Found checkpoint: atlas_step_2000.pt
+     Step: 2000
+     Epoch: 5
+     Loss: 2.3456
+     Perplexity: 10.23
+   
+   Resume from checkpoint? (y/n):
+   ```
+3. Choose `y` to resume or `n` for fresh start
+
+**Documentation**:
+- Added "Checkpoint Auto-Resume" section to README Quick Start
+- Explains automatic detection, prompt workflow, and manual override with `--resume` flag
+4. Training continues from where you left off (or starts fresh)
+
+**Benefits**:
+- No need to manually specify `--resume` flag and checkpoint path
+- Prevents accidental overwrites of training progress
+- User-friendly prompts with all relevant info displayed
+- Works seamlessly with both interactive scripts and direct python command
+
+---
+
 ## 2025-12-06 - ULTRA Config Optimized for Low GPU Temperature
 
 **Changed**:

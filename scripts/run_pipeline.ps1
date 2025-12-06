@@ -224,7 +224,69 @@ if (-not (Test-Path $configFile)) {
     exit 1
 }
 
-# Step 7: Display training information
+# Step 7: Check for existing checkpoints
+Write-Step "Checking for existing checkpoints..."
+$checkpointDir = "checkpoints"
+$latestCheckpoint = $null
+
+if (Test-Path $checkpointDir) {
+    $checkpoints = Get-ChildItem -Path $checkpointDir -Filter "atlas_*.pt" | 
+                   Where-Object { $_.Name -notmatch "best" } |
+                   Sort-Object LastWriteTime -Descending |
+                   Select-Object -First 1
+    
+    if ($checkpoints) {
+        $latestCheckpoint = $checkpoints
+        $checkpointJson = $latestCheckpoint.FullName -replace '\.pt$', '.json'
+        
+        Write-Host ""
+        Write-Host "╔════════════════════════════════════════════════════════════════════════════╗" -ForegroundColor Yellow
+        Write-Host "║                   EXISTING CHECKPOINT DETECTED                             ║" -ForegroundColor Yellow
+        Write-Host "╚════════════════════════════════════════════════════════════════════════════╝" -ForegroundColor Yellow
+        Write-Host ""
+        Write-Host "Found checkpoint: " -NoNewline -ForegroundColor Cyan
+        Write-Host $latestCheckpoint.Name -ForegroundColor White
+        
+        if (Test-Path $checkpointJson) {
+            $metadata = Get-Content $checkpointJson | ConvertFrom-Json
+            Write-Host "  Step: " -NoNewline -ForegroundColor Gray
+            Write-Host $metadata.step -ForegroundColor White
+            Write-Host "  Epoch: " -NoNewline -ForegroundColor Gray
+            Write-Host $metadata.epoch -ForegroundColor White
+            if ($metadata.loss) {
+                Write-Host "  Loss: " -NoNewline -ForegroundColor Gray
+                Write-Host ("{0:F4}" -f $metadata.loss) -ForegroundColor White
+            }
+            if ($metadata.perplexity) {
+                Write-Host "  Perplexity: " -NoNewline -ForegroundColor Gray
+                Write-Host ("{0:F2}" -f $metadata.perplexity) -ForegroundColor White
+            }
+        }
+        Write-Host ""
+        
+        do {
+            $resumeResponse = Read-Host "Resume from this checkpoint? (y/n)"
+            $resumeResponse = $resumeResponse.Trim().ToLower()
+        } while ($resumeResponse -ne "y" -and $resumeResponse -ne "n")
+        
+        if ($resumeResponse -eq "y") {
+            Write-Success "Will resume from checkpoint"
+            $resumeFlag = "--resume `"$($latestCheckpoint.FullName)`""
+        } else {
+            Write-Info "Starting fresh training session"
+            $resumeFlag = ""
+        }
+        Write-Host ""
+    } else {
+        Write-Info "No checkpoints found - starting fresh"
+        $resumeFlag = ""
+    }
+} else {
+    Write-Info "No checkpoint directory found - starting fresh"
+    $resumeFlag = ""
+}
+
+# Step 8: Display training information
 Write-Step "Training Configuration Summary"
 Write-Host @"
 
@@ -248,7 +310,7 @@ if ($response -eq "n" -or $response -eq "N") {
     exit 0
 }
 
-# Step 8: Start training
+# Step 9: Start training
 Write-Step "Starting Training..."
 Write-Host @"
 
@@ -258,7 +320,11 @@ TRAINING STARTED
 
 "@ -ForegroundColor Green
 
-python scripts/train.py --config $configFile --train-data $processedDir
+if ($resumeFlag) {
+    python scripts/train.py --config $configFile --train-data $processedDir $resumeFlag
+} else {
+    python scripts/train.py --config $configFile --train-data $processedDir
+}
 
 # Check result
 if ($LASTEXITCODE -eq 0) {

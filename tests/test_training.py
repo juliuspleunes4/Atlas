@@ -1141,3 +1141,127 @@ class TestCheckpointing:
         metadata_restored = CheckpointMetadata.from_dict(data)
         assert metadata_restored.step == 100
         assert metadata_restored.loss == 2.3
+    
+    def test_find_latest_checkpoint_empty_dir(self, temp_checkpoint_dir):
+        """Test finding latest checkpoint when directory is empty."""
+        from atlas.training import CheckpointManager
+        
+        manager = CheckpointManager(temp_checkpoint_dir)
+        latest = manager.find_latest_checkpoint()
+        
+        assert latest is None
+    
+    def test_find_latest_checkpoint(self, tiny_model, temp_checkpoint_dir):
+        """Test finding the most recent checkpoint."""
+        import time
+        from atlas.training import CheckpointManager, CheckpointMetadata
+        
+        manager = CheckpointManager(temp_checkpoint_dir)
+        optimizer = torch.optim.Adam(tiny_model.parameters())
+        
+        # Save multiple checkpoints with delays
+        for step in [100, 200, 300]:
+            metadata = CheckpointMetadata(step=step, epoch=0, loss=2.0)
+            manager.save_checkpoint(tiny_model, optimizer, metadata)
+            time.sleep(0.01)  # Ensure different timestamps
+        
+        # Find latest
+        latest = manager.find_latest_checkpoint()
+        
+        assert latest is not None
+        assert 'step_300' in latest.name
+    
+    def test_find_latest_checkpoint_excludes_best(self, tiny_model, temp_checkpoint_dir):
+        """Test that find_latest_checkpoint excludes best checkpoint."""
+        from atlas.training import CheckpointManager, CheckpointMetadata
+        from pathlib import Path
+        import time
+        
+        manager = CheckpointManager(temp_checkpoint_dir)
+        optimizer = torch.optim.Adam(tiny_model.parameters())
+        
+        # Save regular checkpoint
+        metadata1 = CheckpointMetadata(step=100, epoch=0, loss=2.0)
+        manager.save_checkpoint(tiny_model, optimizer, metadata1)
+        time.sleep(0.01)
+        
+        # Save best checkpoint (this also saves step_200.pt and best.pt)
+        metadata2 = CheckpointMetadata(step=200, epoch=0, loss=1.5)
+        manager.save_checkpoint(tiny_model, optimizer, metadata2, is_best=True)
+        
+        # Manually create a best-only checkpoint to test exclusion
+        best_path = Path(temp_checkpoint_dir) / "atlas_best.pt"
+        torch.save(tiny_model.state_dict(), best_path)
+        time.sleep(0.01)
+        
+        # Find latest should return step checkpoint, not best
+        latest = manager.find_latest_checkpoint()
+        
+        assert latest is not None
+        assert 'best' not in latest.name
+        assert 'step_' in latest.name  # Should be either step_100 or step_200
+    
+    def test_get_checkpoint_info(self, tiny_model, temp_checkpoint_dir):
+        """Test getting checkpoint metadata without loading."""
+        from atlas.training import CheckpointManager, CheckpointMetadata
+        
+        manager = CheckpointManager(temp_checkpoint_dir)
+        optimizer = torch.optim.Adam(tiny_model.parameters())
+        
+        # Save checkpoint
+        metadata = CheckpointMetadata(
+            step=150,
+            epoch=3,
+            loss=1.8,
+            perplexity=6.05,
+            learning_rate=1e-4
+        )
+        checkpoint_path = manager.save_checkpoint(tiny_model, optimizer, metadata)
+        
+        # Get info
+        from pathlib import Path
+        info = manager.get_checkpoint_info(Path(checkpoint_path))
+        
+        assert info is not None
+        assert info['step'] == 150
+        assert info['epoch'] == 3
+        assert abs(info['loss'] - 1.8) < 0.01
+        assert abs(info['perplexity'] - 6.05) < 0.01
+        assert abs(info['learning_rate'] - 1e-4) < 1e-10
+    
+    def test_get_checkpoint_info_no_metadata(self, temp_checkpoint_dir):
+        """Test get_checkpoint_info when metadata file doesn't exist."""
+        from atlas.training import CheckpointManager
+        from pathlib import Path
+        
+        manager = CheckpointManager(temp_checkpoint_dir)
+        
+        # Create a fake checkpoint path
+        fake_path = Path(temp_checkpoint_dir) / "atlas_step_999.pt"
+        
+        info = manager.get_checkpoint_info(fake_path)
+        
+        assert info is None
+    
+    def test_find_latest_with_epoch_checkpoints(self, tiny_model, temp_checkpoint_dir):
+        """Test finding latest when both step and epoch checkpoints exist."""
+        import time
+        from atlas.training import CheckpointManager, CheckpointMetadata
+        
+        manager = CheckpointManager(temp_checkpoint_dir)
+        optimizer = torch.optim.Adam(tiny_model.parameters())
+        
+        # Save step checkpoint
+        metadata1 = CheckpointMetadata(step=100, epoch=0, loss=2.0)
+        manager.save_checkpoint(tiny_model, optimizer, metadata1)
+        time.sleep(0.01)
+        
+        # Save epoch checkpoint (more recent)
+        metadata2 = CheckpointMetadata(step=234, epoch=1, loss=1.8)
+        manager.save_checkpoint(tiny_model, optimizer, metadata2, is_epoch_end=True)
+        
+        # Find latest should return the epoch checkpoint
+        latest = manager.find_latest_checkpoint()
+        
+        assert latest is not None
+        assert 'epoch_1' in latest.name
