@@ -70,8 +70,12 @@ checkpoints/
 logs/
 *.gguf
 
-# Data
-data/
+# Data files (not source code)
+/data/
+*.txt
+*.jsonl
+*.csv
+*.tsv
 
 # OS
 .DS_Store

@@ -4,6 +4,36 @@ All notable changes to Atlas will be documented in this file.
 
 ---
 
+## 2025-12-06 - Data Pipeline complete (Phase 4)
+
+- Implemented complete data loading and preprocessing pipeline for training
+- **TextDataset** (`atlas/data/dataset.py`):
+  - Loads text from single or multiple files
+  - Tokenizes using existing `Tokenizer` class
+  - Creates fixed-length sequences with sliding window support
+  - Configurable stride for overlapping or non-overlapping sequences
+  - Efficient token buffering (loads and tokenizes all files once)
+  - Proper handling of leftover tokens (no padding)
+  - Statistics and vocab size utilities
+- **DataLoader utilities** (`atlas/data/loader.py`):
+  - `create_dataloader()`: Create PyTorch DataLoaders with proper batching
+  - `collate_batch()`: Batch collation function
+  - `get_dataloader_stats()`: DataLoader statistics
+  - `split_dataset()`: Train/val/test splitting with reproducible seeds
+- **Preprocessing** (`atlas/data/preprocessing.py`):
+  - `clean_text()`: Text cleaning, normalization, Unicode handling
+  - `chunk_text()`: Split long documents into chunks with overlap
+  - `load_text_file()`: Load and optionally clean text files
+  - `load_jsonl()`: Load JSONL format with custom field names
+  - `iterate_documents()`: Memory-efficient document iteration
+  - `count_tokens()`: Token counting utility
+  - `filter_by_length()`: Filter texts by token count
+- **Tests**: Added 72 comprehensive tests covering:
+  - Dataset: loading, sequence creation, indexing, edge cases (27 tests)
+  - DataLoader: batching, splitting, collation, integration (16 tests)
+  - Preprocessing: cleaning, chunking, file loading, filtering (29 tests)
+- All 72 tests passing
+
 ## 2025-12-06 - Model architecture implementation complete (Phase 3)
 
 - Implemented complete decoder-only transformer architecture following GPT-2 design
