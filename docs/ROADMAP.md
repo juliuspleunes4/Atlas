@@ -4,6 +4,51 @@
 
 ---
 
+## Target Specifications
+
+### Model Architecture
+- **Model Size**: ~100-350M parameters (minimum for useful conversation)
+  - Reality check: GPT-2 Small (117M) can hold basic conversations
+  - GPT-2 Medium (345M) is noticeably more coherent
+  - Below 100M typically produces repetitive/nonsensical output
+- **Architecture**: Decoder-only transformer (GPT-2 style)
+- **Vocabulary Size**: 50,261 tokens (GPT-2 BPE tokenizer via tiktoken)
+- **Context Length**: 1024 tokens (standard for conversation)
+- **Hidden Size**: 768 (GPT-2 Small standard, good balance)
+- **Number of Layers**: 12 (minimum for decent reasoning)
+- **Attention Heads**: 12 (must divide hidden_size evenly)
+- **MLP Ratio**: 4.0 (standard FFN expansion → 3072 intermediate size)
+- **Activation**: GELU (modern standard)
+- **Estimated Parameters**: ~117M (similar to GPT-2 Small)
+
+### Training Target
+- **Dataset**: Quality conversational/instruction data
+  - Option 1: OpenWebText subset (~8GB, diverse web text)
+  - Option 2: Combined WikiText + small instruction dataset
+  - Option 3: TinyStories (simple but coherent) + dialogue data
+- **Training Tokens**: 1-5B tokens (minimum for emergent abilities)
+  - Note: GPT-2 was trained on 40GB (~10B tokens)
+  - We can get decent results with 1-5B on focused data
+- **Batch Size**: 16-32 sequences (memory constrained)
+- **Training Time**: 1-3 days on modern GPU (RTX 3080+) or 1-2 weeks on CPU
+- **Loss Target**: Perplexity < 30 on validation set
+- **Hardware**: 16GB+ GPU recommended (or train on CPU with patience)
+
+### Success Criteria
+1. **Model trains successfully** without NaN losses or instability
+2. **Generates coherent text** at inference time (not just random tokens)
+3. **Responds meaningfully** to simple prompts (e.g., "Once upon a time")
+4. **Exports cleanly** to `.gguf` format with correct metadata
+5. **Inference works** in external tools (e.g., llama.cpp, if applicable)
+
+### Constraints
+- **Realistic scope**: Focus on quality over scale
+- **Reproducible**: Clear configs and random seeds
+- **Well-tested**: Every component has passing tests
+- **Documented**: Code should be clear and commented
+
+---
+
 ## Phase 0: Project Foundation ✅
 
 ### 0.1 Repository Structure ✅
