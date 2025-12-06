@@ -12,6 +12,7 @@ from scripts.train import (
     load_config,
     create_model_from_config,
     create_datasets,
+    setup_logging,
 )
 from atlas.tokenizer import Tokenizer
 
@@ -167,6 +168,86 @@ class TestDatasetCreation:
         
         # Should have data from both files
         assert len(train_dataset) > 0
+
+
+class TestLogging:
+    """Test logging functionality."""
+    
+    def _cleanup_handlers(self, logger):
+        """Helper to properly close and remove logger handlers."""
+        for handler in logger.handlers[:]:
+            handler.close()
+            logger.removeHandler(handler)
+    
+    def test_setup_logging_creates_log_file(self):
+        """Test that setup_logging creates training.log file."""
+        with tempfile.TemporaryDirectory() as tmpdir:
+            logger = setup_logging(tmpdir)
+            
+            try:
+                log_file = Path(tmpdir) / "training.log"
+                assert log_file.exists()
+                assert log_file.is_file()
+                
+                # Check log file has initial session marker
+                content = log_file.read_text()
+                assert "NEW TRAINING SESSION" in content
+                assert "=" * 80 in content
+            finally:
+                self._cleanup_handlers(logger)
+    
+    def test_setup_logging_resume_mode(self):
+        """Test that setup_logging appends to existing log on resume."""
+        with tempfile.TemporaryDirectory() as tmpdir:
+            # Create initial log
+            logger1 = setup_logging(tmpdir)
+            log_file = Path(tmpdir) / "training.log"
+            
+            try:
+                initial_content = log_file.read_text()
+            finally:
+                self._cleanup_handlers(logger1)
+            
+            # Setup again with resume
+            logger2 = setup_logging(tmpdir, resume_checkpoint="checkpoint.pt")
+            
+            try:
+                resumed_content = log_file.read_text()
+                
+                # Should contain both sessions
+                assert len(resumed_content) > len(initial_content)
+                assert "RESUMED TRAINING SESSION" in resumed_content
+                assert "Checkpoint: checkpoint.pt" in resumed_content
+            finally:
+                self._cleanup_handlers(logger2)
+    
+    def test_setup_logging_creates_directory(self):
+        """Test that setup_logging creates output directory if it doesn't exist."""
+        with tempfile.TemporaryDirectory() as tmpdir:
+            output_dir = Path(tmpdir) / "new_dir" / "checkpoints"
+            logger = setup_logging(str(output_dir))
+            
+            try:
+                assert output_dir.exists()
+                assert (output_dir / "training.log").exists()
+            finally:
+                self._cleanup_handlers(logger)
+    
+    def test_logging_to_file_and_console(self):
+        """Test that logger writes to both file and console."""
+        with tempfile.TemporaryDirectory() as tmpdir:
+            logger = setup_logging(tmpdir)
+            
+            try:
+                test_message = "Test logging message"
+                logger.info(test_message)
+                
+                # Check message is in log file
+                log_file = Path(tmpdir) / "training.log"
+                content = log_file.read_text()
+                assert test_message in content
+            finally:
+                self._cleanup_handlers(logger)
 
 
 class TestTrainingScript:

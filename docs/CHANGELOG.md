@@ -4,6 +4,44 @@ All notable changes to Atlas will be documented in this file.
 
 ---
 
+## 2025-12-06 - Enhanced Training CLI and Logging
+
+- **Comprehensive logging system** for training script:
+  - Dual logging to console and persistent `training.log` file
+  - Session-based logging with timestamps and separators
+  - Resume-aware logging (appends to existing log with clear session markers)
+  - Detailed progress tracking and metrics reporting
+- **Rich console output** during training:
+  - System information (PyTorch version, CUDA device, GPU memory)
+  - Model statistics (parameters, size in fp32/fp16)
+  - Dataset statistics (samples, tokens, loading time)
+  - Training configuration and hyperparameters
+  - Real-time progress indicators (percentage complete, ETA)
+  - Per-epoch metrics (loss, perplexity, throughput, learning rate)
+  - GPU memory usage monitoring
+  - Validation results with improvement tracking
+  - Best model indicators and checkpoint confirmations
+- **Improved error handling and interruption**:
+  - Graceful Ctrl+C handling with checkpoint saving
+  - Emergency checkpoints on errors
+  - Clear resume instructions on interruption
+  - Detailed error logging
+- **Training statistics**:
+  - Tokens per second throughput
+- **Test coverage**:
+  - Added 4 comprehensive tests for logging functionality in `tests/test_train_script.py`
+  - Tests cover: log file creation, resume mode, directory creation, dual logging
+  - All 292 tests passing (288 existing + 4 new logging tests)
+  - Estimated epochs and training time
+  - Steps per epoch calculation
+  - Total training time and per-step averages
+  - Memory usage tracking (GPU allocated/reserved)
+- **Better user experience**:
+  - Clear section markers and visual separators
+  - Progress indicators with emojis (🎉 success, ⚠️ interrupt, ❌ error, 🌟 new best)
+  - Comprehensive session summaries
+  - Easy-to-follow resume commands
+
 ## 2025-12-06 - GGUF export (Phase 7)
 
 - Implemented complete GGUF export functionality for model deployment

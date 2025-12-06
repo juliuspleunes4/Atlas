@@ -8,11 +8,15 @@ This script handles end-to-end training workflow:
 - Running training loop with checkpointing
 - Evaluating on validation set
 - Handling interruptions gracefully
+- Comprehensive logging to console and file
 """
 
 import argparse
+import logging
 import signal
 import sys
+import time
+from datetime import datetime
 from pathlib import Path
 from typing import Optional
 
@@ -35,11 +39,70 @@ from atlas.training import (
 # Global flag for graceful shutdown
 interrupted = False
 
+# Global logger
+logger = None
+
+
+def setup_logging(output_dir: str, resume_checkpoint: Optional[str] = None):
+    """
+    Setup logging to both console and file.
+    
+    Creates a training.log file in the output directory. If resuming from a checkpoint,
+    adds a separator and timestamp to the existing log file.
+    """
+    log_file = Path(output_dir) / "training.log"
+    
+    # Create output directory if it doesn't exist
+    Path(output_dir).mkdir(parents=True, exist_ok=True)
+    
+    # Check if this is a resume (log file already exists)
+    is_resume = log_file.exists() and resume_checkpoint is not None
+    
+    # If resuming, add separator to existing log
+    if is_resume:
+        with open(log_file, 'a') as f:
+            f.write("\n\n")
+            f.write("=" * 80 + "\n")
+            f.write(f"RESUMED TRAINING SESSION: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n")
+            f.write(f"Checkpoint: {resume_checkpoint}\n")
+            f.write("=" * 80 + "\n\n")
+    
+    # Configure logger
+    logger = logging.getLogger('atlas_training')
+    logger.setLevel(logging.INFO)
+    logger.handlers = []  # Clear existing handlers
+    
+    # Console handler with colored output
+    console_handler = logging.StreamHandler(sys.stdout)
+    console_handler.setLevel(logging.INFO)
+    console_formatter = logging.Formatter('%(message)s')
+    console_handler.setFormatter(console_formatter)
+    logger.addHandler(console_handler)
+    
+    # File handler
+    file_handler = logging.FileHandler(log_file, mode='a')
+    file_handler.setLevel(logging.INFO)
+    file_formatter = logging.Formatter('%(asctime)s | %(message)s', datefmt='%Y-%m-%d %H:%M:%S')
+    file_handler.setFormatter(file_formatter)
+    logger.addHandler(file_handler)
+    
+    # Log session start if not resuming
+    if not is_resume:
+        logger.info("=" * 80)
+        logger.info(f"NEW TRAINING SESSION: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
+        logger.info("=" * 80)
+        logger.info("")
+    
+    return logger
+
 
 def signal_handler(sig, frame):
     """Handle Ctrl+C interrupt."""
-    global interrupted
-    print("\n\n[!] Interrupt received. Saving checkpoint and exiting gracefully...")
+    global interrupted, logger
+    msg = "\n\n[!] Interrupt received. Saving checkpoint and exiting gracefully..."
+    print(msg)
+    if logger:
+        logger.info(msg)
     interrupted = True
 
 
@@ -182,7 +245,7 @@ def create_datasets(train_paths: str, val_paths: Optional[str], tokenizer: Token
 
 def main():
     """Main training loop."""
-    global interrupted
+    global interrupted, logger
     
     # Register signal handler for graceful shutdown
     signal.signal(signal.SIGINT, signal_handler)
@@ -190,51 +253,67 @@ def main():
     # Parse arguments
     args = parse_args()
     
-    print("=" * 80)
-    print("Atlas LLM Training")
-    print("=" * 80)
-    print(f"Config: {args.config}")
-    print(f"Train data: {args.train_data}")
-    print(f"Val data: {args.val_data or 'None'}")
-    print(f"Output dir: {args.output_dir}")
-    print(f"Device: {args.device}")
-    print("=" * 80)
+    # Setup logging first
+    logger = setup_logging(args.output_dir, args.resume)
+    
+    logger.info("=" * 80)
+    logger.info("Atlas LLM Training")
+    logger.info("=" * 80)
+    logger.info(f"Config: {args.config}")
+    logger.info(f"Train data: {args.train_data}")
+    logger.info(f"Val data: {args.val_data or 'None'}")
+    logger.info(f"Output dir: {args.output_dir}")
+    logger.info(f"Device: {args.device}")
+    logger.info(f"PyTorch version: {torch.__version__}")
+    logger.info(f"CUDA available: {torch.cuda.is_available()}")
+    if torch.cuda.is_available():
+        logger.info(f"CUDA device: {torch.cuda.get_device_name(0)}")
+        logger.info(f"CUDA version: {torch.version.cuda}")
+    logger.info("=" * 80)
     
     # Load configuration
-    print("\n[1/6] Loading configuration...")
+    logger.info("\n[1/6] Loading configuration...")
     config = load_config(args.config)
+    logger.info(f"  Model: {config['model']['num_layers']} layers, {config['model']['hidden_size']} hidden, {config['model']['num_heads']} heads")
+    logger.info(f"  Sequence length: {config['model']['max_seq_len']}")
+    logger.info(f"  Batch size: {config['training']['batch_size']}")
+    logger.info(f"  Max steps: {config['training']['max_steps']}")
     
     # Apply command-line overrides
     if args.learning_rate:
         config['training']['learning_rate'] = args.learning_rate
-        print(f"  Override: learning_rate = {args.learning_rate}")
+        logger.info(f"  Override: learning_rate = {args.learning_rate}")
     if args.batch_size:
         config['training']['batch_size'] = args.batch_size
-        print(f"  Override: batch_size = {args.batch_size}")
+        logger.info(f"  Override: batch_size = {args.batch_size}")
     if args.max_steps:
         config['training']['max_steps'] = args.max_steps
-        print(f"  Override: max_steps = {args.max_steps}")
+        logger.info(f"  Override: max_steps = {args.max_steps}")
     
     # Initialize tokenizer
-    print("\n[2/6] Initializing tokenizer...")
+    logger.info("\n[2/6] Initializing tokenizer...")
     tokenizer = Tokenizer(
         tokenizer_name=config['tokenizer']['name'],
         encoding_name=config['tokenizer'].get('encoding', 'cl100k_base'),
     )
-    print(f"  Vocab size: {tokenizer.vocab_size}")
+    logger.info(f"  Tokenizer: {config['tokenizer']['name']}")
+    logger.info(f"  Vocab size: {tokenizer.vocab_size:,}")
     
     # Create model
-    print("\n[3/6] Creating model...")
+    logger.info("\n[3/6] Creating model...")
     model = create_model_from_config(config)
     num_params = sum(p.numel() for p in model.parameters())
-    print(f"  Total parameters: {num_params:,}")
-    print(f"  Model size: ~{num_params * 4 / 1024 / 1024:.2f} MB (fp32)")
+    trainable_params = sum(p.numel() for p in model.parameters() if p.requires_grad)
+    logger.info(f"  Total parameters: {num_params:,}")
+    logger.info(f"  Trainable parameters: {trainable_params:,}")
+    logger.info(f"  Model size: ~{num_params * 4 / 1024 / 1024:.2f} MB (fp32)")
+    logger.info(f"  Model size: ~{num_params * 2 / 1024 / 1024:.2f} MB (fp16)")
     
     # Load checkpoint if resuming
     start_step = 0
     start_epoch = 0
     if args.resume:
-        print(f"\n[*] Resuming from checkpoint: {args.resume}")
+        logger.info(f"\n[*] Resuming from checkpoint: {args.resume}")
         checkpoint_manager = CheckpointManager(args.output_dir)
         
         # Create optimizer and scheduler (will be loaded from checkpoint)
@@ -259,19 +338,26 @@ def main():
         )
         start_step = metadata.step
         start_epoch = metadata.epoch
-        print(f"  Resumed from step {start_step}, epoch {start_epoch}")
+        logger.info(f"  Resumed from step {start_step}, epoch {start_epoch}")
+        logger.info(f"  Previous loss: {metadata.loss:.4f}")
+        logger.info(f"  Previous perplexity: {metadata.perplexity:.2f}")
     
     # Create datasets
-    print("\n[4/6] Loading datasets...")
+    logger.info("\n[4/6] Loading datasets...")
+    load_start = time.time()
     train_dataset, val_dataset = create_datasets(
         args.train_data,
         args.val_data,
         tokenizer,
         config,
     )
-    print(f"  Train samples: {len(train_dataset)}")
+    load_time = time.time() - load_start
+    logger.info(f"  Train samples: {len(train_dataset):,}")
+    logger.info(f"  Train tokens: {train_dataset.get_stats()['total_tokens']:,}")
     if val_dataset:
-        print(f"  Val samples: {len(val_dataset)}")
+        logger.info(f"  Val samples: {len(val_dataset):,}")
+        logger.info(f"  Val tokens: {val_dataset.get_stats()['total_tokens']:,}")
+    logger.info(f"  Dataset loading time: {load_time:.2f}s")
     
     # Create dataloaders
     train_loader = create_dataloader(
@@ -280,6 +366,7 @@ def main():
         shuffle=True,
         num_workers=config['data'].get('num_workers', 0),
     )
+    logger.info(f"  Train batches per epoch: {len(train_loader):,}")
     
     val_loader = None
     if val_dataset:
@@ -289,9 +376,10 @@ def main():
             shuffle=False,
             num_workers=config['data'].get('num_workers', 0),
         )
+        logger.info(f"  Val batches: {len(val_loader):,}")
     
     # Create optimizer and scheduler (if not resuming)
-    print("\n[5/6] Setting up training...")
+    logger.info("\n[5/6] Setting up training...")
     if not args.resume:
         optimizer = create_optimizer(
             model,
@@ -327,24 +415,45 @@ def main():
         keep_last_n=config['training'].get('keep_checkpoints', 3),
     )
     
-    print(f"  Optimizer: AdamW")
-    print(f"  Learning rate: {config['training']['learning_rate']}")
-    print(f"  Scheduler: {config['training'].get('scheduler_type', 'cosine')}")
-    print(f"  Gradient accumulation: {config['training'].get('gradient_accumulation_steps', 1)}")
-    print(f"  Max grad norm: {config['training'].get('max_grad_norm', 1.0)}")
+    logger.info(f"  Optimizer: AdamW")
+    logger.info(f"  Learning rate: {config['training']['learning_rate']}")
+    logger.info(f"  Weight decay: {config['training'].get('weight_decay', 0.01)}")
+    logger.info(f"  Scheduler: {config['training'].get('scheduler_type', 'cosine')}")
+    logger.info(f"  Warmup steps: {config['training'].get('warmup_steps', 0):,}")
+    logger.info(f"  Gradient accumulation: {config['training'].get('gradient_accumulation_steps', 1)}")
+    logger.info(f"  Max grad norm: {config['training'].get('max_grad_norm', 1.0)}")
+    logger.info(f"  Effective batch size: {config['training']['batch_size'] * config['training'].get('gradient_accumulation_steps', 1)}")
+    
+    # Estimate training time
+    total_tokens = len(train_dataset) * config['model']['max_seq_len']
+    tokens_per_step = config['training']['batch_size'] * config['model']['max_seq_len'] * config['training'].get('gradient_accumulation_steps', 1)
+    steps_per_epoch = len(train_dataset) // config['training']['batch_size']
+    estimated_epochs = (config['training']['max_steps'] - start_step) / steps_per_epoch
+    logger.info(f"  Steps per epoch: ~{steps_per_epoch:,}")
+    logger.info(f"  Estimated epochs to complete: ~{estimated_epochs:.1f}")
+    logger.info(f"  Tokens per step: {tokens_per_step:,}")
     
     # Training loop
-    print("\n[6/6] Starting training...")
-    print("=" * 80)
+    logger.info("\n[6/6] Starting training...")
+    logger.info("=" * 80)
+    logger.info(f"Training from step {start_step} to {config['training']['max_steps']}")
+    logger.info(f"Logging interval: every {args.log_interval} steps")
+    logger.info(f"Eval interval: every {args.eval_interval} steps")
+    logger.info(f"Save interval: every {args.save_interval} steps")
+    logger.info("=" * 80)
     
     max_steps = config['training']['max_steps']
     epoch = start_epoch
     best_val_loss = float('inf')
+    training_start_time = time.time()
     
     try:
         while trainer.global_step < max_steps and not interrupted:
             epoch += 1
-            print(f"\n>>> Epoch {epoch}")
+            epoch_start_time = time.time()
+            logger.info(f"\n{'='*80}")
+            logger.info(f">>> EPOCH {epoch} | Step {trainer.global_step}/{max_steps}")
+            logger.info(f"{'='*80}")
             
             # Train for one epoch
             train_stats = trainer.train_epoch(
@@ -353,32 +462,55 @@ def main():
                 log_interval=args.log_interval,
             )
             
-            print(f"\nEpoch {epoch} completed:")
-            print(f"  Train loss: {train_stats['loss']:.4f}")
-            print(f"  Train perplexity: {train_stats['perplexity']:.2f}")
-            print(f"  Steps: {trainer.global_step}/{max_steps}")
+            epoch_time = time.time() - epoch_start_time
+            tokens_processed = len(train_dataset) * config['model']['max_seq_len']
+            tokens_per_sec = tokens_processed / epoch_time
+            
+            logger.info(f"\n{'─'*80}")
+            logger.info(f"Epoch {epoch} Summary:")
+            logger.info(f"  Train loss: {train_stats['loss']:.4f}")
+            logger.info(f"  Train perplexity: {train_stats['perplexity']:.2f}")
+            logger.info(f"  Steps: {trainer.global_step}/{max_steps} ({trainer.global_step/max_steps*100:.1f}%)")
+            logger.info(f"  Epoch time: {epoch_time:.2f}s")
+            logger.info(f"  Throughput: {tokens_per_sec:.0f} tokens/sec")
+            logger.info(f"  Learning rate: {optimizer.param_groups[0]['lr']:.2e}")
+            
+            # Memory usage
+            if torch.cuda.is_available():
+                memory_allocated = torch.cuda.memory_allocated() / 1024**3
+                memory_reserved = torch.cuda.memory_reserved() / 1024**3
+                logger.info(f"  GPU memory: {memory_allocated:.2f}GB allocated, {memory_reserved:.2f}GB reserved")
+            logger.info(f"{'─'*80}")
             
             # Evaluate on validation set
             if val_loader and (trainer.global_step % args.eval_interval == 0 or interrupted):
-                print(f"\n  Running validation...")
+                logger.info(f"\n{'─'*80}")
+                logger.info("Running validation...")
+                val_start = time.time()
                 val_stats = trainer.evaluate(val_loader, show_progress=False)
-                print(f"  Val loss: {val_stats['loss']:.4f}")
-                print(f"  Val perplexity: {val_stats['perplexity']:.2f}")
+                val_time = time.time() - val_start
+                logger.info(f"  Val loss: {val_stats['loss']:.4f}")
+                logger.info(f"  Val perplexity: {val_stats['perplexity']:.2f}")
+                logger.info(f"  Val time: {val_time:.2f}s")
                 
                 # Save best model
                 if val_stats['loss'] < best_val_loss:
+                    improvement = ((best_val_loss - val_stats['loss']) / best_val_loss) * 100
                     best_val_loss = val_stats['loss']
-                    print(f"  *** New best validation loss! ***")
+                    logger.info(f"  🌟 NEW BEST VALIDATION LOSS! (improved by {improvement:.2f}%)")
                     is_best = True
                 else:
                     is_best = False
+                logger.info(f"  Best val loss so far: {best_val_loss:.4f}")
+                logger.info(f"{'─'*80}")
             else:
                 val_stats = None
                 is_best = False
             
             # Save checkpoint
             if trainer.global_step % args.save_interval == 0 or interrupted:
-                print(f"\n  Saving checkpoint...")
+                logger.info(f"\n{'─'*80}")
+                logger.info("Saving checkpoint...")
                 metadata = CheckpointMetadata(
                     step=trainer.global_step,
                     epoch=epoch,
@@ -395,7 +527,10 @@ def main():
                     scheduler=scheduler,
                     is_best=is_best,
                 )
-                print(f"  Checkpoint saved: {checkpoint_path}")
+                logger.info(f"  ✓ Checkpoint saved: {checkpoint_path}")
+                if is_best:
+                    logger.info(f"  ✓ Best model saved")
+                logger.info(f"{'─'*80}")
             
             # Check if interrupted
             if interrupted:
@@ -403,15 +538,26 @@ def main():
         
         # Training complete
         if not interrupted:
-            print("\n" + "=" * 80)
-            print("Training completed successfully!")
-            print(f"Final step: {trainer.global_step}")
-            print(f"Best validation loss: {best_val_loss:.4f}")
-            print("=" * 80)
+            total_training_time = time.time() - training_start_time
+            hours = total_training_time / 3600
+            logger.info(f"\n{'='*80}")
+            logger.info("🎉 TRAINING COMPLETED SUCCESSFULLY!")
+            logger.info(f"{'='*80}")
+            logger.info(f"Final step: {trainer.global_step}")
+            logger.info(f"Final epoch: {epoch}")
+            logger.info(f"Final train loss: {train_stats['loss']:.4f}")
+            logger.info(f"Final train perplexity: {train_stats['perplexity']:.2f}")
+            if val_stats:
+                logger.info(f"Best validation loss: {best_val_loss:.4f}")
+            logger.info(f"Total training time: {hours:.2f} hours ({total_training_time:.0f}s)")
+            logger.info(f"Average time per step: {total_training_time/(trainer.global_step-start_step):.2f}s")
+            logger.info(f"{'='*80}")
     
     except Exception as e:
-        print(f"\n\n[!] Error during training: {e}")
-        print("[!] Saving emergency checkpoint...")
+        logger.error(f"\n\n{'='*80}")
+        logger.error(f"❌ ERROR DURING TRAINING: {str(e)}")
+        logger.error(f"{'='*80}")
+        logger.error("Saving emergency checkpoint...")
         
         # Save emergency checkpoint
         metadata = CheckpointMetadata(
@@ -426,14 +572,24 @@ def main():
             metadata,
             scheduler=scheduler,
         )
-        print(f"[!] Emergency checkpoint saved: {checkpoint_path}")
+        logger.error(f"Emergency checkpoint saved: {checkpoint_path}")
+        logger.error(f"{'='*80}")
         raise
     
     finally:
         if interrupted:
-            print("\nTraining interrupted by user.")
-            print(f"Stopped at step {trainer.global_step}, epoch {epoch}")
-            print("Resume training with --resume flag and the latest checkpoint.")
+            logger.info(f"\n{'='*80}")
+            logger.info("⚠️  TRAINING INTERRUPTED BY USER")
+            logger.info(f"{'='*80}")
+            logger.info(f"Stopped at step {trainer.global_step}, epoch {epoch}")
+            logger.info(f"Progress: {trainer.global_step/max_steps*100:.1f}% complete")
+            logger.info("Resume training with --resume flag and the latest checkpoint:")
+            logger.info(f"  python scripts/train.py --config {args.config} \\")
+            logger.info(f"    --train-data {args.train_data} \\")
+            if args.val_data:
+                logger.info(f"    --val-data {args.val_data} \\")
+            logger.info(f"    --resume {args.output_dir}/checkpoint_step_{trainer.global_step}.pt")
+            logger.info(f"{'='*80}")
 
 
 if __name__ == "__main__":
