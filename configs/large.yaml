@@ -1,0 +1,45 @@
+# Atlas Training Configuration - LARGE MODEL
+# Maximum size for RTX 5060 Ti 16GB (pushing limits!)
+
+# Model architecture (GPT-2 Large-ish - ~500M parameters)
+model:
+  vocab_size: 50261    # GPT-2 vocab size
+  max_seq_len: 1024    # Maximum sequence length
+  hidden_size: 1280    # Hidden dimension (increased)
+  num_layers: 30       # Number of transformer layers (increased)
+  num_heads: 20        # Number of attention heads (increased)
+  mlp_ratio: 4.0       # MLP expansion ratio
+  dropout: 0.1         # Dropout probability
+
+# Tokenizer settings
+tokenizer:
+  name: "gpt2"
+  encoding: "gpt2"
+
+# Data settings
+data:
+  max_seq_len: 1024
+  num_workers: 2
+
+# Training hyperparameters (optimized for large model + 16GB)
+training:
+  learning_rate: 2.0e-4      # Lower LR for larger model
+  weight_decay: 0.01
+  max_grad_norm: 1.0
+  
+  # Smaller batches for large model
+  batch_size: 8              # Reduced to fit in VRAM
+  gradient_accumulation_steps: 4  # Effective batch = 32
+  
+  max_steps: 80000           # More steps for larger model
+  warmup_steps: 3000
+  scheduler_type: "cosine"
+  
+  keep_checkpoints: 2        # Keep fewer checkpoints (large model files)
+
+# WARNING:
+# - This config uses ~14-15GB VRAM
+# - Very close to 16GB limit
+# - Monitor GPU memory during training
+# - Reduce batch_size to 6 if OOM occurs
+# - Best quality but slowest training

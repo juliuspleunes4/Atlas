@@ -1,0 +1,44 @@
+# Atlas Training Configuration - SMALL MODEL
+# Fast training for testing, optimized for RTX 5060 Ti 16GB
+
+# Model architecture (GPT-2 Small - ~124M parameters)
+model:
+  vocab_size: 50261    # GPT-2 vocab size
+  max_seq_len: 1024    # Maximum sequence length
+  hidden_size: 768     # Hidden dimension
+  num_layers: 12       # Number of transformer layers
+  num_heads: 12        # Number of attention heads
+  mlp_ratio: 4.0       # MLP expansion ratio
+  dropout: 0.1         # Dropout probability
+
+# Tokenizer settings
+tokenizer:
+  name: "gpt2"
+  encoding: "gpt2"
+
+# Data settings
+data:
+  max_seq_len: 1024
+  num_workers: 2
+
+# Training hyperparameters (fast training)
+training:
+  learning_rate: 6.0e-4      # Higher LR for smaller model
+  weight_decay: 0.01
+  max_grad_norm: 1.0
+  
+  # Larger batches possible with smaller model
+  batch_size: 24             # Larger batch for small model
+  gradient_accumulation_steps: 2  # Effective batch = 48
+  
+  max_steps: 20000           # Fewer steps needed for small model
+  warmup_steps: 1000
+  scheduler_type: "cosine"
+  
+  keep_checkpoints: 3
+
+# Use this for:
+# - Quick experiments and testing
+# - Faster iteration
+# - Lower memory usage (~6-8GB VRAM)
+# - Still capable of decent text generation
