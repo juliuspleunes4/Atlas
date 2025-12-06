@@ -288,29 +288,29 @@
 
 ---
 
-## Phase 6: Inference and Generation
+## Phase 6: Inference and Generation ✅
 
-### 6.1 Generation Implementation
-- [ ] Implement autoregressive generation:
+### 6.1 Generation Implementation ✅
+- [x] Implement autoregressive generation:
   - Start with prompt tokens
   - Generate one token at a time
   - Append to sequence, repeat
-- [ ] Implement sampling strategies:
+- [x] Implement sampling strategies:
   - Greedy decoding (argmax)
   - Temperature sampling
   - Top-k sampling
   - Top-p (nucleus) sampling
-- [ ] Implement generation stopping conditions:
+- [x] Implement generation stopping conditions:
   - Max length reached
   - EOS token generated
-- [ ] Add support for batched generation (optional for v1)
+- [x] Add support for batched generation (optional for v1)
 
-### 6.2 Inference Testing
-- [ ] Test generation with tiny model
-- [ ] Test different sampling strategies produce different outputs
-- [ ] Test prompt conditioning works correctly
-- [ ] Test stopping conditions (max length, EOS)
-- [ ] Test generation with various temperatures
+### 6.2 Inference Testing ✅
+- [x] Test generation with tiny model
+- [x] Test different sampling strategies produce different outputs
+- [x] Test prompt conditioning works correctly
+- [x] Test stopping conditions (max length, EOS)
+- [x] Test generation with various temperatures
 
 ### 6.3 Inference Script
 - [ ] Create `scripts/infer.py`:

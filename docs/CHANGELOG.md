@@ -4,6 +4,31 @@ All notable changes to Atlas will be documented in this file.
 
 ---
 
+## 2025-12-06 - Inference and text generation (Phase 6)
+
+- Implemented autoregressive text generation with multiple sampling strategies
+- **Generation features** (`atlas/inference/generation.py`):
+  - `TextGenerator`: Main generation class with autoregressive decoding
+  - `GenerationConfig`: Configuration dataclass for generation parameters
+  - `generate_text()`: Convenience function for quick text generation
+  - **Sampling strategies**:
+    - Greedy decoding (argmax, do_sample=False)
+    - Temperature sampling (adjustable randomness)
+    - Top-k sampling (sample from top k tokens)
+    - Top-p (nucleus) sampling (sample from cumulative probability mass)
+    - Combined top-k + top-p for fine-grained control
+  - **Stopping conditions**:
+    - Maximum token length (max_new_tokens)
+    - EOS token detection (eos_token_id)
+  - Batch generation support
+  - Device-aware (CPU/GPU)
+- **Testing** (`tests/test_inference.py`):
+  - Added 21 comprehensive tests for generation
+  - Test all sampling strategies (greedy, temperature, top-k, top-p)
+  - Test configuration validation, EOS stopping, batch generation
+  - Test determinism of greedy, randomness of sampling
+  - All 250 tests passing (21 inference tests)
+
 ## 2025-12-06 - Checkpointing system (Phase 5, Task 4)
 
 - Implemented `CheckpointManager` for model state persistence
