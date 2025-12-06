@@ -41,7 +41,54 @@ Atlas is currently in early development. See [`docs/ROADMAP.md`](docs/ROADMAP.md
 **Upcoming:**
 - Phase 9-10: Advanced features and optimization
 
-**Total: 288 passing tests**
+**Total: 292 passing tests**
+
+## ⚙️ Model Configurations
+
+Atlas provides multiple pre-configured model sizes optimized for different hardware capabilities:
+
+| Configuration | Parameters | Layers | Hidden Size | Heads | Sequence Length | Batch Size | VRAM Usage | Training Speed | Best For |
+|--------------|-----------|--------|-------------|-------|----------------|------------|------------|----------------|----------|
+| **TINY** | ~40M | 8 | 512 | 8 | 512 | 4 (×4 accum) | 4-6 GB | Fastest | Testing, debugging, low-end GPUs |
+| **SMALL** | ~124M | 12 | 768 | 12 | 1024 | 24 (×2 accum) | 6-8 GB | Fast | Quick experiments, prototyping |
+| **DEFAULT** | ~350M | 24 | 1024 | 16 | 1024 | 16 (×2 accum) | 12-14 GB | Medium | **Recommended** for most users |
+| **LARGE** | ~500M | 28 | 1280 | 16 | 1024 | 12 (×2 accum) | 14-15 GB | Slow | Maximum quality, high-end GPUs |
+
+**Configuration Details:**
+
+- **TINY** (`configs/tiny.yaml`): Ultra-lightweight for testing and development
+  - Effective batch size: 16 (4 × 4 gradient accumulation)
+  - Training time: ~1-2 days on RTX 3080 for 10K steps
+  - Good for verifying pipeline, debugging, or running on older GPUs
+  
+- **SMALL** (`configs/small.yaml`): GPT-2 Small equivalent
+  - Effective batch size: 48 (24 × 2 gradient accumulation)
+  - Training time: ~3-5 days on RTX 3080 for 20K steps
+  - Capable of basic text generation and learning patterns
+  
+- **DEFAULT** (`configs/default.yaml`): GPT-2 Medium equivalent (Recommended)
+  - Effective batch size: 32 (16 × 2 gradient accumulation)
+  - Training time: ~1-2 weeks on RTX 3080 for 50K steps
+  - Optimized for RTX 5060 Ti 16GB with safe memory margin
+  - Best balance of quality and training time
+  
+- **LARGE** (`configs/large.yaml`): Maximum quality
+  - Effective batch size: 24 (12 × 2 gradient accumulation)
+  - Training time: ~2-3 weeks on RTX 3080 for 50K steps
+  - Close to 16GB VRAM limit - ensure good cooling
+
+**Choosing a Configuration:**
+
+Use the automated training script to select interactively:
+```powershell
+.\scripts\start_training.ps1  # Windows
+./scripts/start_training.sh   # Linux/Mac
+```
+
+Or specify directly:
+```bash
+python scripts/train.py --config configs/tiny.yaml --train-data data/processed/wikipedia
+```
 
 ## 🚀 Installation
 
@@ -159,7 +206,7 @@ This interactive script will:
 2. ✅ Install Atlas package (`pip install -e .`) if needed
 3. ✅ Check for training data (prompts you if missing)
 4. ✅ Prepare data automatically if not already done
-5. ✅ Let you choose GPU config (small/default/large)
+5. ✅ Let you choose GPU config (tiny/small/default/large)
 6. ✅ Start training with your chosen configuration
 7. ✅ Handle all edge cases and errors gracefully
 
@@ -185,8 +232,11 @@ python scripts/prepare_data.py --list
 # Optional: Custom output directory
 python scripts/prepare_data.py --input data/raw/archive.zip --output data/processed/my_wiki
 
-# 2. Train the model
-python scripts/train.py --config configs/default.yaml
+# 2. Train the model (choose a config based on your GPU)
+python scripts/train.py --config configs/default.yaml --train-data data/processed/wikipedia
+
+# Or use tiny config for lower memory usage:
+# python scripts/train.py --config configs/tiny.yaml --train-data data/processed/wikipedia
 ```
 
 Resume training from a checkpoint:

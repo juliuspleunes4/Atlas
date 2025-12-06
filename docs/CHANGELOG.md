@@ -16,6 +16,11 @@ All notable changes to Atlas will be documented in this file.
   - Added TINY option to GPU configuration menu (option 1)
   - Now offers 4 presets: TINY, SMALL, DEFAULT, LARGE
   - Users can choose based on available GPU memory
+- **Updated README.md**:
+  - Added comprehensive configuration comparison table
+  - Shows parameters, layers, VRAM usage, training speed for all configs
+  - Updated test count from 288 to 292 passing tests
+  - Added configuration selection guidance
 - **Fixed batch collation** (`atlas/data/loader.py`):
   - `collate_batch()` now returns dictionary with `'input_ids'` key instead of plain tensor
   - Matches expected format in `Trainer.train_step()` which accesses `batch['input_ids']`
