@@ -11,7 +11,7 @@ Atlas is a complete pipeline for building, training, and deploying decoder-only 
 
 ## ✨ Features
 
-- **🎯 Clean Implementation**: Decoder-only transformer architecture built from scratch with PyTorchrch
+- **🎯 Clean Implementation**: Decoder-only transformer architecture built from scratch with PyTorch
 - **🔄 Complete Pipeline**: Training, evaluation, inference, and export all in one place
 - **📦 GGUF Export**: Convert trained models to GGUF format for use with llama.cpp
 - **🧩 Modular Design**: Well-organized codebase with clear separation of concerns
@@ -92,7 +92,6 @@ Atlas provides multiple pre-configured model sizes optimized for different hardw
   - Training time: Slower than XLARGE due to extreme accumulation
   - **Best for: Maximum parameters while keeping GPU cool and quiet**
 
-**Choosing a Configuration:**
 **Choosing a Configuration:**
 
 Use the automated training script to select interactively:
