@@ -167,9 +167,24 @@ python scripts/infer.py \
 
 ### Export to GGUF
 
+Export trained model to GGUF format:
+
 ```bash
-# Export to GGUF format (TODO: implementation pending)
-python scripts/export_gguf.py --checkpoint checkpoints/model.pt --output model.gguf
+# Export with float32 (default)
+python scripts/export_gguf.py \
+  --checkpoint checkpoints/my_model/best_model.pt \
+  --output models/atlas_model.gguf \
+  --quantization f32
+```
+
+Export with float16 for smaller file size:
+
+```bash
+python scripts/export_gguf.py \
+  --checkpoint checkpoints/my_model/best_model.pt \
+  --output models/atlas_model_f16.gguf \
+  --quantization f16 \
+  --tokenizer gpt2
 ```
 
 ## Project Structure

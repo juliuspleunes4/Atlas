@@ -4,6 +4,37 @@ All notable changes to Atlas will be documented in this file.
 
 ---
 
+## 2025-12-06 - GGUF export (Phase 7)
+
+- Implemented complete GGUF export functionality for model deployment
+- **GGUF writer** (`atlas/export/gguf.py`):
+  - `GGUFWriter`: Complete GGUF file format writer
+  - Support for GGUF v3 format specification
+  - Metadata serialization (strings, integers, floats, booleans, arrays)
+  - Tensor serialization with proper alignment
+  - F32 and F16 quantization support
+  - Automatic tensor name mapping from Atlas to GGUF format
+  - Binary file writing with correct byte ordering
+- **Export function** (`export_atlas_to_gguf`):
+  - Convert PyTorch models to GGUF format
+  - Model architecture metadata export
+  - Tokenizer configuration export
+  - State dict tensor mapping and conversion
+  - Support for all transformer blocks, embeddings, output head
+- **Export script** (`scripts/export_gguf.py`):
+  - CLI interface for model export
+  - Checkpoint loading with config inference
+  - F32/F16 quantization options
+  - File size reporting
+  - Error handling and validation
+- **Testing** (`tests/test_export.py`):
+  - Added 17 comprehensive tests for GGUF export
+  - Test writer functionality, metadata, tensors
+  - Test file structure, magic numbers, headers
+  - Test F16 creates smaller files than F32
+  - Test full model export pipeline
+  - All 288 tests passing (17 export tests)
+
 ## 2025-12-06 - Inference script (Phase 6.3)
 
 - Implemented production-ready inference script for text generation
