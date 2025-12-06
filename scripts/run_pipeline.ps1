@@ -159,40 +159,50 @@ if (Test-Path $processedDir) {
 
 # Step 6: Choose GPU configuration
 Write-Step "Choosing GPU configuration..."
-Write-Host @"
-
-Available configurations:
-
-1. TINY    (~40M params, ~4-6GB VRAM)
-   - Very fast training
-   - Low memory usage
-   - Good for testing/debugging
-
-2. SMALL  (~124M params, ~6-8GB VRAM)
-   - Fast training
-   - Good for quick experiments
-   - Decent quality
-
-3. DEFAULT (~350M params, ~12-14GB VRAM) [RECOMMENDED]
-   - Balanced performance
-   - Good quality
-   - Safe memory margin
-
-4. LARGE  (~500M params, ~14-15GB VRAM)
-   - Best quality
-   - Slowest training
-   - Close to 16GB VRAM limit
-
-5. XLARGE (~500M params, ~8-10GB VRAM) [MEMORY OPTIMIZED]
-   - Same size as LARGE but uses less memory
-   - Smaller batch sizes with gradient accumulation
-   - Safer for GPU limits while maximizing parameters
-
-"@ -ForegroundColor White
+Write-Host ""
+Write-Host "╔════════════════════════════════════════════════════════════════════════════╗" -ForegroundColor Cyan
+Write-Host "║                    STANDARD CONFIGURATIONS                                 ║" -ForegroundColor Cyan
+Write-Host "╚════════════════════════════════════════════════════════════════════════════╝" -ForegroundColor Cyan
+Write-Host ""
+Write-Host "1. TINY    (~40M params, ~4-6GB VRAM)" -ForegroundColor Green
+Write-Host "   - Very fast training" -ForegroundColor Gray
+Write-Host "   - Low memory usage" -ForegroundColor Gray
+Write-Host "   - Good for testing/debugging" -ForegroundColor Gray
+Write-Host ""
+Write-Host "2. SMALL  (~124M params, ~6-8GB VRAM)" -ForegroundColor Green
+Write-Host "   - Fast training" -ForegroundColor Gray
+Write-Host "   - Good for quick experiments" -ForegroundColor Gray
+Write-Host "   - Decent quality" -ForegroundColor Gray
+Write-Host ""
+Write-Host "3. DEFAULT (~350M params, ~12-14GB VRAM) " -NoNewline -ForegroundColor Green
+Write-Host "[RECOMMENDED]" -ForegroundColor Yellow
+Write-Host "   - Balanced performance" -ForegroundColor Gray
+Write-Host "   - Good quality" -ForegroundColor Gray
+Write-Host "   - Safe memory margin" -ForegroundColor Gray
+Write-Host ""
+Write-Host "4. LARGE  (~500M params, ~14-15GB VRAM)" -ForegroundColor Green
+Write-Host "   - Best quality" -ForegroundColor Gray
+Write-Host "   - Slowest training" -ForegroundColor Gray
+Write-Host "   - Close to 16GB VRAM limit" -ForegroundColor Gray
+Write-Host ""
+Write-Host "╔════════════════════════════════════════════════════════════════════════════╗" -ForegroundColor Magenta
+Write-Host "║              CUSTOM MEMORY-OPTIMIZED CONFIGURATIONS                        ║" -ForegroundColor Magenta
+Write-Host "╚════════════════════════════════════════════════════════════════════════════╝" -ForegroundColor Magenta
+Write-Host ""
+Write-Host "5. XLARGE (~500M params, ~8-10GB VRAM)" -ForegroundColor Cyan
+Write-Host "   - Same size as LARGE but uses less memory" -ForegroundColor Gray
+Write-Host "   - Smaller batch sizes with gradient accumulation" -ForegroundColor Gray
+Write-Host "   - Safer for GPU limits while maximizing parameters" -ForegroundColor Gray
+Write-Host ""
+Write-Host "6. ULTRA (~500M params, ~5-7GB VRAM)" -ForegroundColor Cyan
+Write-Host "   - batch_size=1, shorter sequences (512 tokens)" -ForegroundColor Gray
+Write-Host "   - Absolute minimum memory for 500M+ model" -ForegroundColor Gray
+Write-Host "   - Use when XLARGE doesn't fit" -ForegroundColor Gray
+Write-Host ""
 
 do {
-    $choice = Read-Host "Choose configuration (1/2/3/4/5)"
-} while ($choice -notin @("1", "2", "3", "4", "5"))
+    $choice = Read-Host "Choose configuration (1/2/3/4/5/6)"
+} while ($choice -notin @("1", "2", "3", "4", "5", "6"))
 
 $configFile = switch ($choice) {
     "1" { "configs/tiny.yaml"; $configName = "TINY" }
@@ -200,6 +210,7 @@ $configFile = switch ($choice) {
     "3" { "configs/default.yaml"; $configName = "DEFAULT" }
     "4" { "configs/large.yaml"; $configName = "LARGE" }
     "5" { "configs/xlarge.yaml"; $configName = "XLARGE" }
+    "6" { "configs/ultra.yaml"; $configName = "ULTRA" }
 }
 
 Write-Success "Selected: $configName configuration"

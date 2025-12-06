@@ -132,40 +132,56 @@ fi
 
 # Step 6: Choose GPU configuration
 step "Choosing GPU configuration..."
-cat << EOF
-
-Available configurations:
-
-1. SMALL  (~124M params, ~6-8GB VRAM)
-   - Fastest training
-   - Good for quick experiments
-   - Decent quality
-
-2. DEFAULT (~350M params, ~12-14GB VRAM) [RECOMMENDED]
-   - Balanced performance
-   - Good quality
-   - Safe memory margin
-
-3. LARGE  (~500M params, ~14-15GB VRAM)
-   - Best quality
-   - Slowest training
-   - Close to 16GB VRAM limit
-
-4. XLARGE (~500M params, ~8-10GB VRAM) [MEMORY OPTIMIZED]
-   - Same size as LARGE but uses less memory
-   - Smaller batch sizes with gradient accumulation
-   - Safer for GPU limits while maximizing parameters
-
-EOF
+echo ""
+echo -e "\033[1;36m╔════════════════════════════════════════════════════════════════════════════╗\033[0m"
+echo -e "\033[1;36m║                    STANDARD CONFIGURATIONS                                 ║\033[0m"
+echo -e "\033[1;36m╚════════════════════════════════════════════════════════════════════════════╝\033[0m"
+echo ""
+echo -e "\033[1;32m1. TINY    (~40M params, ~4-6GB VRAM)\033[0m"
+echo -e "\033[0;37m   - Very fast training\033[0m"
+echo -e "\033[0;37m   - Low memory usage\033[0m"
+echo -e "\033[0;37m   - Good for testing/debugging\033[0m"
+echo ""
+echo -e "\033[1;32m2. SMALL  (~124M params, ~6-8GB VRAM)\033[0m"
+echo -e "\033[0;37m   - Fast training\033[0m"
+echo -e "\033[0;37m   - Good for quick experiments\033[0m"
+echo -e "\033[0;37m   - Decent quality\033[0m"
+echo ""
+echo -e "\033[1;32m3. DEFAULT (~350M params, ~12-14GB VRAM) \033[1;33m[RECOMMENDED]\033[0m"
+echo -e "\033[0;37m   - Balanced performance\033[0m"
+echo -e "\033[0;37m   - Good quality\033[0m"
+echo -e "\033[0;37m   - Safe memory margin\033[0m"
+echo ""
+echo -e "\033[1;32m4. LARGE  (~500M params, ~14-15GB VRAM)\033[0m"
+echo -e "\033[0;37m   - Best quality\033[0m"
+echo -e "\033[0;37m   - Slowest training\033[0m"
+echo -e "\033[0;37m   - Close to 16GB VRAM limit\033[0m"
+echo ""
+echo -e "\033[1;35m╔════════════════════════════════════════════════════════════════════════════╗\033[0m"
+echo -e "\033[1;35m║              CUSTOM MEMORY-OPTIMIZED CONFIGURATIONS                        ║\033[0m"
+echo -e "\033[1;35m╚════════════════════════════════════════════════════════════════════════════╝\033[0m"
+echo ""
+echo -e "\033[1;36m5. XLARGE (~500M params, ~8-10GB VRAM)\033[0m"
+echo -e "\033[0;37m   - Same size as LARGE but uses less memory\033[0m"
+echo -e "\033[0;37m   - Smaller batch sizes with gradient accumulation\033[0m"
+echo -e "\033[0;37m   - Safer for GPU limits while maximizing parameters\033[0m"
+echo ""
+echo -e "\033[1;36m6. ULTRA (~500M params, ~5-7GB VRAM)\033[0m"
+echo -e "\033[0;37m   - batch_size=1, shorter sequences (512 tokens)\033[0m"
+echo -e "\033[0;37m   - Absolute minimum memory for 500M+ model\033[0m"
+echo -e "\033[0;37m   - Use when XLARGE doesn't fit\033[0m"
+echo ""
 
 while true; do
-    read -p "Choose configuration (1/2/3/4): " choice
+    read -p "Choose configuration (1/2/3/4/5/6): " choice
     case $choice in
-        1) CONFIG_FILE="configs/small.yaml"; CONFIG_NAME="SMALL"; break;;
-        2) CONFIG_FILE="configs/default.yaml"; CONFIG_NAME="DEFAULT"; break;;
-        3) CONFIG_FILE="configs/large.yaml"; CONFIG_NAME="LARGE"; break;;
-        4) CONFIG_FILE="configs/xlarge.yaml"; CONFIG_NAME="XLARGE"; break;;
-        *) warning "Invalid choice. Please enter 1, 2, 3, or 4.";;
+        1) CONFIG_FILE="configs/tiny.yaml"; CONFIG_NAME="TINY"; break;;
+        2) CONFIG_FILE="configs/small.yaml"; CONFIG_NAME="SMALL"; break;;
+        3) CONFIG_FILE="configs/default.yaml"; CONFIG_NAME="DEFAULT"; break;;
+        4) CONFIG_FILE="configs/large.yaml"; CONFIG_NAME="LARGE"; break;;
+        5) CONFIG_FILE="configs/xlarge.yaml"; CONFIG_NAME="XLARGE"; break;;
+        6) CONFIG_FILE="configs/ultra.yaml"; CONFIG_NAME="ULTRA"; break;;
+        *) warning "Invalid choice. Please enter 1, 2, 3, 4, 5, or 6.";;
     esac
 done
 
