@@ -4,6 +4,110 @@ All notable changes to Atlas will be documented in this file.
 
 ---
 
+## [v1.0.0] - 2025-12-07 - First Stable Release 🎉
+
+**Major Milestone**: Atlas v1.0.0 represents the first complete, production-ready release of the from-scratch language model implementation.
+
+### 🎯 Complete Features
+
+**Core Architecture** (Phase 3):
+- Full decoder-only transformer architecture (GPT-style)
+- Multi-head self-attention with causal masking
+- Feed-forward networks with multiple activation functions (GELU, SiLU, ReLU)
+- Pre-norm architecture with residual connections
+- Learned positional embeddings
+- Weight tying between embeddings and output head
+- Gradient checkpointing for memory efficiency
+- 51 comprehensive model tests
+
+**Training Infrastructure** (Phase 5):
+- Complete training loop with gradient accumulation
+- Learning rate scheduling (warmup + cosine decay)
+- Checkpoint management (step-based, epoch-based, best model)
+- Automatic checkpoint resumption with interactive prompts
+- Progress tracking and logging
+- Validation and evaluation
+- 62 training tests including auto-resume
+
+**Data Pipeline** (Phase 4):
+- Text dataset with sliding window tokenization
+- Multiple file format support (txt, JSONL)
+- Preprocessing utilities (cleaning, chunking, filtering)
+- Efficient data loading with PyTorch DataLoader
+- Train/validation splitting
+- 72 data pipeline tests
+
+**Configuration System** (Phase 1):
+- YAML-based configuration
+- CLI override support
+- Multiple pre-configured model sizes (TINY to ULTRA)
+- Validation and type checking
+- 32 configuration tests
+
+**Tokenizer** (Phase 2):
+- GPT-2 BPE tokenizer via tiktoken
+- Batch encoding/decoding
+- Special token handling
+- 27 tokenizer tests
+
+**Inference** (Phase 6):
+- Text generation with sampling strategies
+- Temperature, top-k, top-p sampling
+- Interactive and batch modes
+- 33 inference tests
+
+**Model Export** (Phase 7):
+- GGUF format export
+- Float32 and Float16 quantization
+- Metadata embedding
+- 17 export tests
+
+### 📊 Statistics
+
+- **307 passing tests** across all components
+- **6 model configurations** (40M to 500M parameters)
+- **10 comprehensive documentation files**
+- **Clean, modular codebase** with 94%+ coverage on core modules
+
+### 🎁 Model Configurations
+
+Six production-ready configurations:
+- **TINY** (40M params): Testing and development
+- **SMALL** (124M params): GPT-2 Small equivalent
+- **DEFAULT** (350M params): Recommended, GPT-2 Medium equivalent
+- **LARGE** (500M params): Maximum quality
+- **XLARGE** (500M params): Memory-optimized
+- **ULTRA** (500M params): Extreme low-temperature operation
+
+### 📚 Documentation
+
+Complete documentation suite:
+- README.md - Project overview and quickstart
+- ROADMAP.md - Development plan and progress
+- CHANGELOG.md - This file
+- ARCHITECTURE.md - Technical deep-dive
+- CONTRIBUTING.md - Contribution guidelines
+- CODE_OF_CONDUCT.md - Community standards
+- SECURITY.md - Security policy
+- LICENSE_GUIDE.md - Licensing information
+- TESTING.md - Testing guide
+- FAQ.md - Frequently asked questions
+
+### 🚀 Getting Started
+
+```bash
+git clone https://github.com/juliuspleunes4/Atlas.git
+cd Atlas
+.\scripts\run_pipeline.ps1  # Windows
+./scripts/run_pipeline.sh   # Linux/Mac
+```
+
+### 🙏 Acknowledgments
+
+This release represents the culmination of comprehensive development work across all phases of the project. Special thanks to all contributors and users who provided feedback during development.
+
+---
+
 ## 2025-12-06 - Automatic Checkpoint Resume with Interactive Prompts
 
 **Added**:

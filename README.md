@@ -1,9 +1,10 @@
 # 🌍 Atlas
 
+[![Version](https://img.shields.io/badge/version-v1.0.0-blue.svg)](https://github.com/juliuspleunes4/Atlas/releases/tag/v1.0.0)
 [![Python 3.8+](https://img.shields.io/badge/python-3.8+-blue.svg)](https://www.python.org/downloads/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
-[![Tests](https://img.shields.io/badge/tests-passing-brightgreen.svg)](tests/)
+[![Tests](https://img.shields.io/badge/tests-307%20passing-brightgreen.svg)](tests/)
 
 **A from-scratch language model implementation with GGUF export.**
 
