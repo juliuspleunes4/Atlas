@@ -260,7 +260,7 @@ Data: $PROCESSED_DIR
 Config file: $CONFIG_FILE
 
 The training will:
-- Use your GPU (if available)
+- Use GPU if available (otherwise CPU)
 - Save checkpoints to: checkpoints/
 - Log to console and: training.log
 - Show progress with loss, perplexity, and throughput
