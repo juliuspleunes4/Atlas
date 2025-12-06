@@ -1,0 +1,2 @@
+# Ensure only Python is detected in GitHub Linguist
+* linguist-language=Python
