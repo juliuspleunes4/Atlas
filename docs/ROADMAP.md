@@ -256,27 +256,27 @@
 - [x] Add logging (console and/or file):
   - Log every N steps
   - Log to stdout with tqdm progress bar
-- [ ] Add checkpointing:
+- [x] Add checkpointing:
   - Save model, optimizer, scheduler state
   - Save every N steps or at end of epoch
   - Resume from checkpoint
 - [ ] Add early stopping (optional)
 
-### 5.3 Evaluation Loop
-- [ ] Implement evaluation loop:
+### 5.3 Evaluation Loop ✅
+- [x] Implement evaluation loop:
   - Run model on validation set
   - Compute validation loss and perplexity
   - No gradient computation (eval mode)
-- [ ] Run evaluation periodically during training
-- [ ] Log evaluation metrics
+- [x] Run evaluation periodically during training
+- [x] Log evaluation metrics
 
 ### 5.4 Training Testing ✅
 - [x] Test training loop runs without crashing (1-2 steps, tiny model, tiny data)
 - [x] Test loss decreases over a few steps (overfitting test on tiny data)
-- [ ] Test checkpointing (save and resume)
+- [x] Test checkpointing (save and resume)
 - [x] Test gradient accumulation correctness
 - [x] Test LR scheduler correctness (warmup → decay)
-- [ ] Test evaluation loop
+- [x] Test evaluation loop
 
 ### 5.5 Training Script
 - [ ] Create `scripts/train.py`:

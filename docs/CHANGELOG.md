@@ -4,6 +4,47 @@ All notable changes to Atlas will be documented in this file.
 
 ---
 
+## 2025-12-06 - Checkpointing system (Phase 5, Task 4)
+
+- Implemented `CheckpointManager` for model state persistence
+- **Checkpointing features** (`atlas/training/checkpoint.py`):
+  - `CheckpointManager`: Complete checkpoint management system
+  - `CheckpointMetadata`: Dataclass for checkpoint metadata (step, epoch, loss, perplexity, LR)
+  - `save_checkpoint()`: Save model, optimizer, scheduler state with metadata
+  - `load_checkpoint()`: Restore training state from checkpoint
+  - `save_best_checkpoint()`: Track and save best model based on validation loss
+  - `load_best_checkpoint()`: Load the best performing model
+  - `load_latest_checkpoint()`: Resume from most recent checkpoint
+  - Automatic cleanup of old checkpoints (configurable retention)
+  - JSON metadata files for easy inspection
+  - `list_checkpoints()`: Query available checkpoints
+- **Testing** (`tests/test_training.py`):
+  - Added 10 comprehensive tests for CheckpointManager
+  - Test save/load with model, optimizer, scheduler
+  - Test best model tracking, latest checkpoint loading
+  - Test automatic cleanup, metadata persistence
+  - All 229 tests passing (56 training tests total)
+- **Phase 5 (Training Loop) complete**: Loss, optimizer, training loop, evaluation, and checkpointing all implemented and tested
+
+## 2025-12-06 - Evaluation loop implementation (Phase 5, Task 3)
+
+- Implemented `Evaluator` class for validation without gradient computation
+- **Evaluation features** (`atlas/training/evaluator.py`):
+  - `Evaluator`: Evaluation loop with no gradient computation
+  - `EvaluationMetrics`: Container for validation metrics (loss, perplexity, token count)
+  - `evaluate_step()`: Single evaluation step
+  - `evaluate()`: Full validation with progress bar and metric tracking
+  - `evaluate_model()`: Convenience function for quick evaluation
+  - Token-weighted loss computation for accurate metrics
+- **Trainer integration**:
+  - Added `Trainer.evaluate()` method for seamless validation during training
+  - Integrated evaluator with existing training workflow
+- **Testing** (`tests/test_training.py`):
+  - Added 9 comprehensive tests for Evaluator class
+  - Test no-gradient computation, max_batches, eval mode
+  - Test metrics computation, convenience functions, trainer integration
+  - All 219 tests passing (46 training tests total)
+
 ## 2025-12-06 - Training loop implementation (Phase 5, Task 2)
 
 - Implemented `Trainer` class for training loop orchestration

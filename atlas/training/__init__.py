@@ -17,6 +17,8 @@ from atlas.training.loss import (
     compute_perplexity,
 )
 from atlas.training.trainer import Trainer, TrainingMetrics
+from atlas.training.evaluator import Evaluator, EvaluationMetrics, evaluate_model
+from atlas.training.checkpoint import CheckpointManager, CheckpointMetadata
 
 __all__ = [
     "create_optimizer",
@@ -28,4 +30,9 @@ __all__ = [
     "compute_perplexity",
     "Trainer",
     "TrainingMetrics",
+    "Evaluator",
+    "EvaluationMetrics",
+    "evaluate_model",
+    "CheckpointManager",
+    "CheckpointMetadata",
 ]

@@ -249,3 +249,28 @@ class Trainer:
         """Reset training metrics (e.g., at start of new epoch)."""
         self.tokens_processed = 0
         self.start_time = time.time()
+    
+    @torch.no_grad()
+    def evaluate(
+        self,
+        dataloader: DataLoader,
+        max_batches: Optional[int] = None,
+        show_progress: bool = True,
+    ) -> Dict[str, float]:
+        """
+        Evaluate model on validation data.
+        
+        Args:
+            dataloader: DataLoader for validation data
+            max_batches: Maximum number of batches (None for all)
+            show_progress: Whether to show progress bar
+        
+        Returns:
+            Dictionary with evaluation metrics
+        """
+        from .evaluator import Evaluator
+        
+        evaluator = Evaluator(self.model, device=self.device)
+        metrics = evaluator.evaluate(dataloader, max_batches=max_batches, show_progress=show_progress)
+        
+        return metrics.to_dict()
