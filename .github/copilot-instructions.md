@@ -206,6 +206,7 @@ When Copilot finishes a task (or a logical unit of work), it should:
 - Keep the change focused and coherent.
 - Ensure the feature is **fully tested** as described above.
 - Update `docs/CHANGELOG.md` appropriately.
+- Update `docs/ROADMAP.md` with the completed feature.
 - Not create new `.md` files or add meta-summaries.
 - Be ready for a **next, small, well-defined task** from the user (e.g., “now implement X”, “add tests for Y”, “refactor Z”).
 

@@ -4,12 +4,12 @@
 
 ---
 
-## Phase 0: Project Foundation
+## Phase 0: Project Foundation ✅
 
-### 0.1 Repository Structure
+### 0.1 Repository Structure ✅
 - [x] Create initial directory structure
-- [ ] Set up `atlas/` package with `__init__.py`
-- [ ] Create subdirectories:
+- [x] Set up `atlas/` package with `__init__.py`
+- [x] Create subdirectories:
   - `atlas/model/` – model architecture components
   - `atlas/tokenizer/` – tokenization logic
   - `atlas/training/` – training loop and optimization
@@ -21,24 +21,24 @@
   - `tests/` – all test modules
   - `scripts/` – CLI scripts for training, inference, export
 
-### 0.2 Development Environment
-- [ ] Create `requirements.txt` with core dependencies:
+### 0.2 Development Environment ✅
+- [x] Create `requirements.txt` with core dependencies:
   - PyTorch
   - NumPy
-  - sentencepiece or tiktoken (tokenizer)
+  - tiktoken (tokenizer)
   - tqdm (progress bars)
   - pyyaml (config files)
   - pytest (testing)
-  - gguf-py (GGUF export)
-- [ ] Create `setup.py` or `pyproject.toml` for package installation
-- [ ] Add `.gitignore` for Python, checkpoints, data, logs
+  - gguf (GGUF export)
+- [x] Create `setup.py` for package installation
+- [x] Add `.gitignore` for Python, checkpoints, data, logs
 - [ ] Set up linting/formatting (black, flake8, mypy)
 - [ ] Configure pre-commit hooks (optional but recommended)
 
-### 0.3 Documentation Setup
+### 0.3 Documentation Setup ✅
 - [x] Create `docs/ROADMAP.md`
 - [x] Create `docs/CHANGELOG.md`
-- [ ] Update `README.md` with project overview, quickstart
+- [x] Update `README.md` with project overview, quickstart
 - [ ] Add architecture documentation (optional: `docs/ARCHITECTURE.md`)
 
 ---
