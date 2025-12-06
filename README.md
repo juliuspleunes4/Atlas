@@ -95,7 +95,35 @@ pytest tests/ -v
 
 ## 🎯 Quick Start
 
-### 📦 Get Training Data
+### 🎬 For Absolute Beginners
+
+1. **Clone the repository**
+   ```bash
+   git clone https://github.com/juliuspleunes4/Atlas.git
+   cd Atlas
+   ```
+
+2. **Download training data**: Get the Wikipedia SimpleEnglish dataset from [Kaggle](https://www.kaggle.com/datasets/ffatty/plaintext-wikipedia-simpleenglish)
+
+3. **Place the zip file** in `data/raw/archive.zip`
+
+4. **Run the training pipeline**:
+   ```powershell
+   # Windows
+   .\scripts\start_training.ps1
+   
+   # Linux/Mac
+   chmod +x scripts/start_training.sh
+   ./scripts/start_training.sh
+   ```
+
+That's it! The script handles everything else automatically.
+
+---
+
+### 📦 Manual Data Preparation (Optional)
+
+If you prefer manual control:
 
 1. **Download Wikipedia SimpleEnglish dataset** from [Kaggle](https://www.kaggle.com/datasets/ffatty/plaintext-wikipedia-simpleenglish)
 
@@ -111,26 +139,31 @@ pytest tests/ -v
 
    This extracts and organizes 249K articles (~400MB) into `data/processed/wikipedia/`.
 
-### 🚀 One-Command Setup & Training
+### 🚀 Complete Training Pipeline (Recommended for New Users)
 
-The easiest way to get started:
+**The absolute easiest way - handles everything automatically:**
 
 **Windows:**
 ```powershell
-.\scripts\setup_and_train.ps1
+.\scripts\start_training.ps1
 ```
 
 **Linux/Mac:**
 ```bash
-chmod +x scripts/setup_and_train.sh
-./scripts/setup_and_train.sh
+chmod +x scripts/start_training.sh
+./scripts/start_training.sh
 ```
 
-This automatically:
-- ✅ Checks Python and dependencies
-- ✅ Prepares training data (if not already done)
-- ✅ Launches training with default config
-- ✅ Logs everything to console and `training.log`
+This interactive script will:
+1. ✅ Check Python and create virtual environment if needed
+2. ✅ Install Atlas package (`pip install -e .`) if needed
+3. ✅ Check for training data (prompts you if missing)
+4. ✅ Prepare data automatically if not already done
+5. ✅ Let you choose GPU config (small/default/large)
+6. ✅ Start training with your chosen configuration
+7. ✅ Handle all edge cases and errors gracefully
+
+Perfect for developers who want **zero friction** from clone to training!
 
 ### 🏋️ Manual Training
 

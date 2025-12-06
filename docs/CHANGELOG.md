@@ -4,32 +4,51 @@ All notable changes to Atlas will be documented in this file.
 
 ---
 
-## 2025-12-06 - Data Preparation Pipeline and Automation Scripts
+## 2025-12-06 - Complete Training Pipeline and GPU-Optimized Configs
 
+- **Complete training pipeline** (`scripts/start_training.ps1` / `.sh`):
+  - **Zero-friction onboarding**: Handles entire pipeline from clone to training
+  - Interactive prompts for all decisions (GPU config, data prep, etc.)
+  - Automatically checks and installs Atlas package (`pip install -e .`)
+  - Creates virtual environment if missing
+  - Checks for training data and prompts user if not found
+  - Prepares data automatically with user confirmation
+  - Lets user choose GPU configuration (small/default/large)
+  - Comprehensive error handling for all edge cases
+  - Perfect for new developers - just run one command!
+- **GPU-optimized configuration presets**:
+  - `configs/small.yaml`: ~124M params, 6-8GB VRAM, fastest training
+  - `configs/default.yaml`: ~350M params, 12-14GB VRAM, balanced (recommended)
+  - `configs/large.yaml`: ~500M params, 14-15GB VRAM, maximum quality
+  - Optimized for RTX 5060 Ti 16GB but adaptable to other GPUs
+  - Clear memory usage and parameter count documentation
 - **Data preparation script** (`scripts/prepare_data.py`):
   - Automatic extraction of Wikipedia SimpleEnglish dataset from zip
   - Organizes text files with clean naming convention
   - Displays statistics (file count, total size)
   - `--list` flag to show available datasets
   - Cross-platform (Windows/Linux/Mac)
-- **One-command automation scripts**:
-  - `scripts/setup_and_train.ps1` for Windows PowerShell
-  - `scripts/setup_and_train.sh` for Linux/Mac bash
+- **Setup automation scripts** (`scripts/setup_and_train.ps1` / `.sh`):
   - Automatically checks prerequisites (Python, venv, dependencies)
   - Auto-prepares data if not already done
-  - Launches training with progress tracking
+  - Launches training with default config
   - Colored output and clear status messages
 - **Documentation updates**:
-  - Updated README.md with Quick Start section
+  - Updated README.md with "Absolute Beginners" quick start
+  - Added GPU configuration comparison table
+  - Clear instructions for automated vs manual workflows
   - Updated data/README.md with usage examples
-  - Clear instructions for one-command vs manual workflows
-- **Developer experience**:
-  - Drop zip in `data/raw/archive.zip`
-  - Run `.\scripts\setup_and_train.ps1` (Windows) or `./scripts/setup_and_train.sh` (Linux/Mac)
-  - Everything automated from data prep to training
+- **Developer experience highlights**:
+  - **One command from zero to training**: `.\scripts\start_training.ps1`
+  - Handles missing dependencies, data, configs automatically
+  - Interactive prompts guide users through choices
+  - Comprehensive error messages with next steps
+  - Works on fresh clone with zero manual setup
 - **Code quality**:
   - Removed emojis from all scripts to prevent mojibake issues
   - Replaced with ASCII tags: [INFO], [SUCCESS], [ERROR], [WARNING]
+  - Robust error handling and input validation
+  - Cross-platform compatibility (Windows PowerShell + Linux/Mac Bash)
 
 ## 2025-12-06 - Enhanced Training CLI and Logging
 
