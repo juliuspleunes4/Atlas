@@ -10,6 +10,7 @@ These instructions are for GitHub Copilot (and Copilot Agents) working on **Atla
 - Prefer **small, focused tasks** over big multi-feature changes.
 - Never assume requirements; use clear TODO markers where needed.
 - Follow **clean code** and **industry best practices** at all times.
+- **No shortcuts**: correctness, robustness, and test coverage are always more important than speed of implementation.
 
 ---
 
@@ -122,6 +123,43 @@ Copilot should **not**:
 
 ## 7. Testing
 
+### 7.1 After every new feature
+
+After **creating or modifying a feature**, Copilot must:
+
+- Design and implement **rigorous tests** that:
+  - Cover **all relevant aspects** of the feature.
+  - Cover **every realistic use case** and edge case that is known/foreseeable.
+  - Validate both “happy path” and failure behavior (e.g. invalid inputs, misconfigurations).
+- Be **extremely thorough**:
+  - Don’t just test the “normal” flow; include boundaries, error handling, and interaction with other modules.
+  - Use multiple small, focused tests instead of a single broad test when possible.
+
+### 7.2 Handling failing tests
+
+When a test fails, Copilot must:
+
+1. Determine **where the bug is**:
+   - In the **test** (wrong expectation, wrong setup).
+   - Or in the **implementation** (logic, assumptions, side-effects).
+2. If the test is incorrect:
+   - Fix the test to reflect the **correct, clearly reasoned expected behavior**.
+   - Do **not** simplify or weaken the test just to make it pass.
+3. If the implementation is incorrect:
+   - **Fix the implementation**, **whatever it takes**, maintaining design quality.
+   - Refactor as needed to preserve clarity and maintainability.
+   - Re-run the full relevant test suite until all tests pass.
+
+### 7.3 Absolutely no cheating
+
+- Copilot must **never**:
+  - Modify or remove a test **just** to make a failing test pass.
+  - Water down assertions or coverage to hide a bug.
+  - Introduce hidden shortcuts, early returns, or special cases that bypass logic only to satisfy tests.
+- Tests should **reflect real, correct behavior**, not the current (buggy) state of the code.
+
+### 7.4 General testing standards
+
 - Every non-trivial module should have **tests**.
 - Add or extend tests when adding features or fixing bugs.
 - Tests should:
@@ -166,6 +204,7 @@ Copilot should **not**:
 When Copilot finishes a task (or a logical unit of work), it should:
 
 - Keep the change focused and coherent.
+- Ensure the feature is **fully tested** as described above.
 - Update `docs/CHANGELOG.md` appropriately.
 - Not create new `.md` files or add meta-summaries.
 - Be ready for a **next, small, well-defined task** from the user (e.g., “now implement X”, “add tests for Y”, “refactor Z”).
@@ -178,4 +217,4 @@ Copilot should **never**:
 
 ---
 
-By following these rules, Copilot will help build Atlas into a clean, scalable, and maintainable LLM codebase with incremental, well-documented progress.
+By following these rules, Copilot will help build Atlas into a clean, scalable, and maintainable LLM codebase with **thoroughly tested**, reliable functionality and incremental, well-documented progress.
