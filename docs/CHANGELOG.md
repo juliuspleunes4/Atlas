@@ -4,6 +4,20 @@ All notable changes to Atlas will be documented in this file.
 
 ---
 
+## 2025-12-06 - Fix DataLoader Batch Format for Training
+
+- **Fixed batch collation** (`atlas/data/loader.py`):
+  - `collate_batch()` now returns dictionary with `'input_ids'` key instead of plain tensor
+  - Matches expected format in `Trainer.train_step()` which accesses `batch['input_ids']`
+  - Updated docstrings and examples to reflect dictionary structure
+- **Updated tests** (`tests/test_data.py`):
+  - Fixed 6 data loader tests to expect dictionary structure
+  - Updated assertions to check `batch['input_ids']` instead of direct tensor access
+  - All 72 data tests passing
+- **Training now fully functional**:
+  - Complete pipeline from data loading through training loop works correctly
+  - Model, tokenizer, data loading, and training all integrated properly
+
 ## 2025-12-06 - Complete Training Pipeline and GPU-Optimized Configs
 
 - **Complete training pipeline** (`scripts/start_training.ps1` / `.sh`):

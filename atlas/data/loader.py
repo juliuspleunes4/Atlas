@@ -44,8 +44,8 @@ def create_dataloader(
         >>> loader = create_dataloader(dataset, batch_size=8, shuffle=True)
         >>> 
         >>> for batch in loader:
-        ...     # batch shape: (batch_size, seq_len)
-        ...     print(batch.shape)
+        ...     # batch is a dict with 'input_ids' key
+        ...     print(batch['input_ids'].shape)  # (batch_size, seq_len)
     """
     if batch_size <= 0:
         raise ValueError(f"batch_size must be positive, got {batch_size}")
@@ -78,11 +78,12 @@ def collate_batch(batch):
         batch: List of tensors from the dataset
         
     Returns:
-        Stacked tensor of shape (batch_size, seq_len)
+        Dictionary with 'input_ids' key containing stacked tensor of shape (batch_size, seq_len)
     """
     # batch is a list of tensors, each of shape (seq_len,)
     # Stack them into (batch_size, seq_len)
-    return torch.stack(batch, dim=0)
+    input_ids = torch.stack(batch, dim=0)
+    return {'input_ids': input_ids}
 
 
 def get_dataloader_stats(loader: DataLoader) -> Dict[str, Any]:

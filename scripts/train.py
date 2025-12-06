@@ -222,8 +222,21 @@ def create_model_from_config(config: dict) -> AtlasLM:
 
 def create_datasets(train_paths: str, val_paths: Optional[str], tokenizer: Tokenizer, config: dict):
     """Create train and validation datasets."""
-    # Parse paths (comma-separated)
-    train_files = [p.strip() for p in train_paths.split(',')]
+    from pathlib import Path
+    
+    # Parse paths (comma-separated or directory)
+    train_path_list = [p.strip() for p in train_paths.split(',')]
+    train_files = []
+    for path_str in train_path_list:
+        path = Path(path_str)
+        if path.is_dir():
+            # If directory, glob for all .txt files
+            train_files.extend([str(f) for f in path.glob('*.txt')])
+        else:
+            train_files.append(path_str)
+    
+    if not train_files:
+        raise ValueError(f"No training files found in {train_paths}")
     
     train_dataset = TextDataset(
         file_paths=train_files,
@@ -233,11 +246,20 @@ def create_datasets(train_paths: str, val_paths: Optional[str], tokenizer: Token
     
     val_dataset = None
     if val_paths:
-        val_files = [p.strip() for p in val_paths.split(',')]
-        val_dataset = TextDataset(
-            file_paths=val_files,
-            tokenizer=tokenizer,
-            max_seq_len=config['data']['max_seq_len'],
+        val_path_list = [p.strip() for p in val_paths.split(',')]
+        val_files = []
+        for path_str in val_path_list:
+            path = Path(path_str)
+            if path.is_dir():
+                val_files.extend([str(f) for f in path.glob('*.txt')])
+            else:
+                val_files.append(path_str)
+        
+        if val_files:
+            val_dataset = TextDataset(
+                file_paths=val_files,
+                tokenizer=tokenizer,
+                max_seq_len=config['data']['max_seq_len'],
         )
     
     return train_dataset, val_dataset
@@ -293,8 +315,7 @@ def main():
     # Initialize tokenizer
     logger.info("\n[2/6] Initializing tokenizer...")
     tokenizer = Tokenizer(
-        tokenizer_name=config['tokenizer']['name'],
-        encoding_name=config['tokenizer'].get('encoding', 'cl100k_base'),
+        encoding_name=config['tokenizer'].get('encoding', config['tokenizer']['name']),
     )
     logger.info(f"  Tokenizer: {config['tokenizer']['name']}")
     logger.info(f"  Vocab size: {tokenizer.vocab_size:,}")
@@ -497,7 +518,7 @@ def main():
                 if val_stats['loss'] < best_val_loss:
                     improvement = ((best_val_loss - val_stats['loss']) / best_val_loss) * 100
                     best_val_loss = val_stats['loss']
-                    logger.info(f"  🌟 NEW BEST VALIDATION LOSS! (improved by {improvement:.2f}%)")
+                    logger.info(f"  [BEST] NEW BEST VALIDATION LOSS! (improved by {improvement:.2f}%)")
                     is_best = True
                 else:
                     is_best = False
@@ -541,7 +562,7 @@ def main():
             total_training_time = time.time() - training_start_time
             hours = total_training_time / 3600
             logger.info(f"\n{'='*80}")
-            logger.info("🎉 TRAINING COMPLETED SUCCESSFULLY!")
+            logger.info("[SUCCESS] TRAINING COMPLETED SUCCESSFULLY!")
             logger.info(f"{'='*80}")
             logger.info(f"Final step: {trainer.global_step}")
             logger.info(f"Final epoch: {epoch}")
@@ -555,7 +576,7 @@ def main():
     
     except Exception as e:
         logger.error(f"\n\n{'='*80}")
-        logger.error(f"❌ ERROR DURING TRAINING: {str(e)}")
+        logger.error(f"[ERROR] TRAINING ERROR: {str(e)}")
         logger.error(f"{'='*80}")
         logger.error("Saving emergency checkpoint...")
         
@@ -579,7 +600,7 @@ def main():
     finally:
         if interrupted:
             logger.info(f"\n{'='*80}")
-            logger.info("⚠️  TRAINING INTERRUPTED BY USER")
+            logger.info("[WARNING] TRAINING INTERRUPTED BY USER")
             logger.info(f"{'='*80}")
             logger.info(f"Stopped at step {trainer.global_step}, epoch {epoch}")
             logger.info(f"Progress: {trainer.global_step/max_steps*100:.1f}% complete")

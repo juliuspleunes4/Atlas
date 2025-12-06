@@ -547,8 +547,10 @@ class TestDataLoader:
         # Get first batch
         batch = next(iter(loader))
         
-        assert batch.shape[0] <= batch_size  # May be smaller if drop_last=False
-        assert batch.shape[1] == 20  # Sequence length
+        assert isinstance(batch, dict)
+        assert 'input_ids' in batch
+        assert batch['input_ids'].shape[0] <= batch_size  # May be smaller if drop_last=False
+        assert batch['input_ids'].shape[1] == 20  # Sequence length
     
     def test_create_dataloader_with_drop_last(self, sample_dataset):
         """Test DataLoader with drop_last=True."""
@@ -564,7 +566,9 @@ class TestDataLoader:
         
         # All batches should have exact batch_size
         for batch in loader:
-            assert batch.shape[0] == batch_size
+            assert isinstance(batch, dict)
+            assert 'input_ids' in batch
+            assert batch['input_ids'].shape[0] == batch_size
     
     def test_create_dataloader_invalid_batch_size(self, sample_dataset):
         """Test that invalid batch size raises ValueError."""
@@ -589,8 +593,9 @@ class TestDataLoader:
         batch_count = 0
         for batch in loader:
             batch_count += 1
-            assert isinstance(batch, torch.Tensor)
-            assert batch.ndim == 2  # (batch_size, seq_len)
+            assert isinstance(batch, dict)
+            assert 'input_ids' in batch
+            assert batch['input_ids'].ndim == 2  # (batch_size, seq_len)
         
         assert batch_count == len(loader)
     
@@ -609,10 +614,12 @@ class TestDataLoader:
         
         collated = collate_batch(batch)
         
-        assert collated.shape == (3, 5)
-        assert torch.equal(collated[0], batch[0])
-        assert torch.equal(collated[1], batch[1])
-        assert torch.equal(collated[2], batch[2])
+        assert isinstance(collated, dict)
+        assert 'input_ids' in collated
+        assert collated['input_ids'].shape == (3, 5)
+        assert torch.equal(collated['input_ids'][0], batch[0])
+        assert torch.equal(collated['input_ids'][1], batch[1])
+        assert torch.equal(collated['input_ids'][2], batch[2])
     
     def test_collate_batch_single_item(self):
         """Test collating a batch with a single item."""
@@ -621,8 +628,10 @@ class TestDataLoader:
         batch = [torch.tensor([1, 2, 3])]
         collated = collate_batch(batch)
         
-        assert collated.shape == (1, 3)
-        assert torch.equal(collated[0], batch[0])
+        assert isinstance(collated, dict)
+        assert 'input_ids' in collated
+        assert collated['input_ids'].shape == (1, 3)
+        assert torch.equal(collated['input_ids'][0], batch[0])
     
     # --- DataLoader Stats Tests ---
     
@@ -762,19 +771,25 @@ class TestDataLoader:
         
         # Test train loader
         train_batch = next(iter(train_loader))
-        assert train_batch.ndim == 2
-        assert train_batch.shape[1] == 20
+        assert isinstance(train_batch, dict)
+        assert 'input_ids' in train_batch
+        assert train_batch['input_ids'].ndim == 2
+        assert train_batch['input_ids'].shape[1] == 20
         
         # Test val loader
         val_batch = next(iter(val_loader))
-        assert val_batch.ndim == 2
-        assert val_batch.shape[1] == 20
+        assert isinstance(val_batch, dict)
+        assert 'input_ids' in val_batch
+        assert val_batch['input_ids'].ndim == 2
+        assert val_batch['input_ids'].shape[1] == 20
         
         # Test test loader (if not empty)
         if len(test_loader) > 0:
             test_batch = next(iter(test_loader))
-            assert test_batch.ndim == 2
-            assert test_batch.shape[1] == 20
+            assert isinstance(test_batch, dict)
+            assert 'input_ids' in test_batch
+            assert test_batch['input_ids'].ndim == 2
+            assert test_batch['input_ids'].shape[1] == 20
 
 
 class TestPreprocessing:
