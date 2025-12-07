@@ -640,6 +640,7 @@ def main():
             # Check if THIS checkpoint (not just previous steps) is best
             # This ensures checkpoint with loss 3.79 will overwrite best with 3.88
             is_checkpoint_best = loss < checkpoint_manager.best_metric
+            # logger.info(f"  [DEBUG] Checkpoint loss: {loss:.4f}, Best metric: {checkpoint_manager.best_metric:.4f}, Is best: {is_checkpoint_best}")
             
             checkpoint_path = checkpoint_manager.save_checkpoint(
                 model,
@@ -653,6 +654,11 @@ def main():
             logger.info(f"  [SAVED]   Step: {metadata.step}, Epoch: {metadata.epoch}")
             logger.info(f"  [SAVED]   Loss: {metadata.loss:.4f}, Perplexity: {metadata.perplexity:.2f}")
             logger.info(f"  [SAVED]   Learning Rate: {metadata.learning_rate:.2e}")
+            
+            # Log if this checkpoint was saved as best
+            if is_checkpoint_best:
+                best_path = checkpoint_manager.checkpoint_dir / f'{checkpoint_manager.model_name}_best.pt'
+                logger.info(f"  [BEST] Updated atlas_best.pt with this checkpoint (loss: {metadata.loss:.4f})")
             if is_best_step:
                 logger.info(f"  [BEST] Best model saved (always kept)")
             logger.info(f"{'-'*80}")
