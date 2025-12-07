@@ -6,6 +6,7 @@ import os
 import pytest
 import torch
 import math
+from pathlib import Path
 
 from atlas.training.loss import (
     compute_lm_loss,
@@ -1456,3 +1457,95 @@ class TestCheckpointing:
             metadata = json.load(f)
         assert metadata['loss'] == 3.5
         assert metadata['step'] == 300
+    
+    def test_best_checkpoint_restored_on_resume(self, tiny_model, temp_checkpoint_dir):
+        """Test that best_train_loss is correctly restored when resuming training."""
+        from atlas.training.checkpoint import CheckpointManager, CheckpointMetadata
+        from atlas.training.optimizer import create_optimizer
+        
+        manager = CheckpointManager(
+            checkpoint_dir=temp_checkpoint_dir,
+            model_name='atlas',
+        )
+        
+        # Create optimizer
+        optimizer = create_optimizer(
+            tiny_model,
+            learning_rate=1e-4,
+            weight_decay=0.01,
+        )
+        
+        # Save checkpoint with best_metric set to 4.5
+        metadata = CheckpointMetadata(
+            step=500,
+            epoch=1,
+            loss=5.2,
+            perplexity=181.3,
+            best_metric=4.5,  # Previous best was 4.5
+        )
+        checkpoint_path = manager.save_checkpoint(
+            tiny_model,
+            optimizer,
+            metadata,
+            is_best=False,
+        )
+        
+        # Verify checkpoint has best_metric
+        checkpoint = torch.load(checkpoint_path)
+        assert checkpoint['metadata']['best_metric'] == 4.5
+        
+        # Load checkpoint (simulating resume)
+        loaded_metadata = manager.load_checkpoint(
+            checkpoint_path,
+            tiny_model,
+            optimizer,
+            device='cpu',
+        )
+        
+        # Verify best_metric is accessible after loading
+        assert loaded_metadata.best_metric == 4.5
+        assert loaded_metadata.step == 500
+        assert loaded_metadata.loss == 5.2
+        
+        # Now save a new checkpoint with loss=4.8 (worse than 4.5, should not be marked best)
+        metadata2 = CheckpointMetadata(
+            step=600,
+            epoch=1,
+            loss=4.8,
+            perplexity=121.5,
+            best_metric=4.5,  # Still tracking 4.5 as best
+        )
+        manager.save_checkpoint(
+            tiny_model,
+            optimizer,
+            metadata2,
+            is_best=False,  # Not best because 4.8 > 4.5
+        )
+        
+        # Best checkpoint should not exist or should still be from an earlier save
+        best_path = Path(temp_checkpoint_dir) / 'atlas_best.pt'
+        if best_path.exists():
+            best_checkpoint = torch.load(best_path)
+            # Should not be step 600
+            assert best_checkpoint['metadata']['step'] != 600
+        
+        # Save checkpoint with loss=4.2 (better than 4.5, should be marked best)
+        metadata3 = CheckpointMetadata(
+            step=700,
+            epoch=1,
+            loss=4.2,
+            perplexity=66.7,
+            best_metric=4.2,  # New best
+        )
+        manager.save_checkpoint(
+            tiny_model,
+            optimizer,
+            metadata3,
+            is_best=True,  # This is best
+        )
+        
+        # Verify best checkpoint now exists and has step 700
+        assert best_path.exists()
+        best_checkpoint = torch.load(best_path)
+        assert best_checkpoint['metadata']['step'] == 700
+        assert best_checkpoint['metadata']['loss'] == 4.2

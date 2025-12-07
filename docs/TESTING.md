@@ -487,7 +487,7 @@ Tests run automatically on:
 ### CI Requirements
 
 All tests must pass before merging:
-- ✅ All 325+ tests pass
+- ✅ All 326+ tests pass
 - ✅ No warnings or errors
 - ✅ Coverage remains above 90%
 - ✅ No flaky tests (inconsistent pass/fail)

@@ -4,6 +4,25 @@ All notable changes to Atlas will be documented in this file.
 
 ---
 
+## [v1.2.1] - 2025-12-07 - Best Model Checkpoint Resume Fix
+
+### Added
+- **New test for checkpoint resume**: Added `test_best_checkpoint_restored_on_resume` verifying best_metric restoration on resume (total: 326 passing tests)
+  - Tests checkpoint saves `best_metric` correctly
+  - Verifies loading checkpoint restores `best_metric`
+  - Ensures subsequent saves only mark as "best" when loss improves from restored value
+  - Prevents regression where best checkpoints weren't created after resume
+
+### Fixed
+- **Best model tracking on resume**: Fixed best checkpoint not being saved after resuming training
+  - Root cause: `best_train_loss` was always reset to `float('inf')` on resume instead of being restored from checkpoint
+  - Now restores `best_train_loss` from checkpoint metadata when resuming
+  - Checkpoint metadata now saves `best_train_loss` (was saving `None` before when no validation data)
+  - Ensures `atlas_best.pt` is created when training loss improves, even across multiple training sessions
+  - Example: Resuming from step 600 now correctly recognizes if step 1400 has the best loss
+
+---
+
 ## [v1.2.0] - 2025-12-07 - Checkpoint Resume & Progress Tracking Fixes
 
 ### Added

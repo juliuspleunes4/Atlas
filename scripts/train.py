@@ -594,6 +594,13 @@ def main():
     epoch = start_epoch - 1  # Will be incremented at loop start
     best_val_loss = float('inf')
     best_train_loss = float('inf')  # Track best training loss
+    
+    # Restore best loss from checkpoint if resuming
+    if args.resume and 'metadata' in locals():
+        if metadata.best_metric is not None:
+            best_train_loss = metadata.best_metric
+            logger.info(f"  Restored best training loss from checkpoint: {best_train_loss:.4f}")
+    
     training_start_time = time.time()
     
     # Define step callback for mid-epoch checkpointing
@@ -772,7 +779,7 @@ def main():
                     loss=train_stats['loss'],
                     perplexity=train_stats['perplexity'],
                     learning_rate=optimizer.param_groups[0]['lr'],
-                    best_metric=best_val_loss if val_stats else None,
+                    best_metric=best_val_loss if val_stats else best_train_loss,
                 )
                 
                 checkpoint_path = checkpoint_manager.save_checkpoint(
