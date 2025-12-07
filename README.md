@@ -190,7 +190,7 @@ cd Atlas
 ```
 
 ### Step 2: Download training data
-Get the Wikipedia SimpleEnglish dataset from [Kaggle](https://www.kaggle.com/datasets/ffatty/plaintext-wikipedia-simpleenglish) (171 MB zip file)
+Get the Wikipedia SimpleEnglish dataset from [Kaggle](https://www.kaggle.com/datasets/ffatty/plain-text-wikipedia-simpleenglish) (171 MB zip file)
 
 ### Step 3: Place the zip file
 ```
