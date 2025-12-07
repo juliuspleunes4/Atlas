@@ -375,10 +375,8 @@ def main():
     
     # Initialize tokenizer
     logger.info("\n[2/6] Initializing tokenizer...")
-    tokenizer = Tokenizer(
-        encoding_name=config.tokenizer.encoding,
-    )
-    logger.info(f"  Tokenizer: {config.tokenizer.name}")
+    tokenizer = Tokenizer(encoding_name="gpt2")
+    logger.info(f"  Tokenizer: gpt2")
     logger.info(f"  Vocab size: {tokenizer.vocab_size:,}")
     
     # Create model
