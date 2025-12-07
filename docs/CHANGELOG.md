@@ -4,6 +4,33 @@ All notable changes to Atlas will be documented in this file.
 
 ---
 
+## [v1.2.0] - 2025-12-07 - Checkpoint Resume & Progress Tracking Fixes
+
+### Fixed
+- **Checkpoint resume double-prompt**: Fixed pipeline script asking twice about resuming from checkpoint
+  - Pipeline now passes `--no-resume` flag when user chooses not to resume
+  - Eliminates duplicate prompts between pipeline and train.py
+- **Epoch counter on resume**: Fixed epoch display jumping to next epoch when resuming from checkpoint
+  - Resuming from epoch 1, step 100 now correctly shows "EPOCH 1" instead of "EPOCH 2"
+  - Initialize `epoch = start_epoch - 1` to account for loop increment
+- **Progress bar tracking**: Fixed progress bar to show global steps instead of batches
+  - Progress bar now displays correct position when resuming (e.g., 100/80000)
+  - Eliminates confusing batch counter that resets each epoch
+  - Shows consistent progress toward max_steps goal throughout training
+  - Manual progress bar updates prevent jumping between batch and step counts
+- **PowerShell checkpoint path quoting**: Fixed checkpoint path being double-quoted in run_pipeline.ps1
+  - Changed from building `--resume "path"` string to passing path variable directly
+  - Resolves "unrecognized arguments" error when resuming
+
+### Changed
+- **Progress bar display**: Training progress now shows global steps throughout entire training session
+  - Before: Showed batches (0-166478 per epoch), reset each epoch
+  - After: Shows global steps (100-80000), continuous across epochs
+  - Time estimate shows seconds per global step instead of seconds per batch
+  - Makes progress tracking more intuitive for long training runs
+
+---
+
 ## [v1.1.0] - 2025-12-07 - Memory-Efficient Optimizer & Reliable Checkpointing
 
 ### Added

@@ -271,19 +271,23 @@ if (Test-Path $checkpointDir) {
         
         if ($resumeResponse -eq "y") {
             Write-Success "Will resume from checkpoint"
-            $resumeFlag = "--resume `"$($latestCheckpoint.FullName)`""
+            $resumeCheckpoint = $latestCheckpoint.FullName
+            $noResume = $false
         } else {
             Write-Info "Starting fresh training session"
-            $resumeFlag = "--no-resume"
+            $resumeCheckpoint = $null
+            $noResume = $true
         }
         Write-Host ""
     } else {
         Write-Info "No checkpoints found - starting fresh"
-        $resumeFlag = ""
+        $resumeCheckpoint = $null
+        $noResume = $false  # No need to pass --no-resume if no checkpoints exist
     }
 } else {
     Write-Info "No checkpoint directory found - starting fresh"
-    $resumeFlag = ""
+    $resumeCheckpoint = $null
+    $noResume = $false  # No need to pass --no-resume if no checkpoints exist
 }
 
 # Step 8: Display training information
@@ -326,8 +330,10 @@ TRAINING STARTED
 
 "@ -ForegroundColor Green
 
-if ($resumeFlag) {
-    python -B -W ignore::SyntaxWarning scripts/train.py --config $configFile --train-data $processedDir $resumeFlag
+if ($resumeCheckpoint) {
+    python -B -W ignore::SyntaxWarning scripts/train.py --config $configFile --train-data $processedDir --resume $resumeCheckpoint
+} elseif ($noResume) {
+    python -B -W ignore::SyntaxWarning scripts/train.py --config $configFile --train-data $processedDir --no-resume
 } else {
     python -B -W ignore::SyntaxWarning scripts/train.py --config $configFile --train-data $processedDir
 }

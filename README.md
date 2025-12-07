@@ -210,8 +210,20 @@ Atlas automatically detects existing checkpoints and asks if you want to resume 
 Resume from checkpoint? (y/n):
 ```
 
-- **Choose "y"**: Continue training from the checkpoint (preserves optimizer state, learning rate, etc.)
-- **Choose "n"**: Start a fresh training session (existing checkpoints remain untouched)
+- **Choose "y"**: Continue training from the checkpoint
+  - Restores model weights, optimizer state, learning rate scheduler
+  - Continues from the exact step and epoch where training stopped
+  - Progress bar shows: `Training: 0%| 500/80000` (global steps)
+- **Choose "n"**: Start a fresh training session
+  - Existing checkpoints remain untouched (won't be deleted)
+  - Training starts from step 0, epoch 1
+
+**Progress Tracking:**
+- Training progress displays **global steps** throughout the entire session
+- Example: `Training: 1%| 1250/80000 [06:15<8:16:32, 2.64s/it]`
+  - `1250/80000`: Current step out of max_steps
+  - `2.64s/it`: Seconds per global step (1 step = gradient_accumulation_steps batches)
+  - Progress bar continues across epochs without resetting
 
 This works in:
 - Interactive pipeline scripts (`run_pipeline.ps1`, `run_pipeline.sh`)
@@ -220,6 +232,11 @@ This works in:
 To bypass the prompt and force resumption:
 ```bash
 python scripts/train.py --config configs/default.yaml --resume checkpoints/atlas_step_500.pt
+```
+
+To skip the prompt and start fresh:
+```bash
+python scripts/train.py --config configs/default.yaml --no-resume
 ```
 
 ---

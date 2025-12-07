@@ -413,7 +413,7 @@ def main():
     
     # Load checkpoint if resuming
     start_step = 0
-    start_epoch = 0
+    start_epoch = 1  # Start from epoch 1 (will be decremented before loop)
     if args.resume:
         logger.info(f"\n[*] Resuming from checkpoint: {args.resume}")
         checkpoint_manager = CheckpointManager(args.output_dir)
@@ -590,7 +590,7 @@ def main():
     logger.info("=" * 80)
     
     max_steps = config.training.max_steps
-    epoch = start_epoch
+    epoch = start_epoch - 1  # Will be incremented at loop start
     best_val_loss = float('inf')
     training_start_time = time.time()
     

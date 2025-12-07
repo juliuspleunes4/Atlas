@@ -203,16 +203,19 @@ class Trainer:
         epoch_tokens = 0
         num_batches = 0
         
-        # Progress bar
+        # Progress bar - show global steps, not batches
+        # Disable automatic update since we manually update based on global_step
+        use_step_mode = max_steps is not None
         pbar = tqdm(
-            dataloader,
-            desc='Training',
             total=max_steps if max_steps else len(dataloader),
+            desc='Training',
+            initial=self.global_step if use_step_mode else 0,
+            disable=False,
         )
         
         accumulation_step = 0
         
-        for batch_idx, batch in enumerate(pbar):
+        for batch_idx, batch in enumerate(dataloader):
             # Check max steps
             if max_steps is not None and self.global_step >= max_steps:
                 break
@@ -232,6 +235,16 @@ class Trainer:
             
             # Update accumulation step
             accumulation_step = (accumulation_step + 1) % self.gradient_accumulation_steps
+            
+            # Update progress bar position
+            if use_step_mode:
+                # Show global steps when max_steps is set
+                if was_last_accumulation:
+                    pbar.n = self.global_step
+                    pbar.refresh()
+            else:
+                # Show batches when no max_steps
+                pbar.update(1)
             
             # Call step callback if provided (for checkpointing, etc.)
             # Only call after a full accumulation cycle (when global_step was incremented)
