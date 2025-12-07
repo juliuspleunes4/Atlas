@@ -183,6 +183,7 @@ class Trainer:
         max_steps: Optional[int] = None,
         log_interval: int = 10,
         step_callback: Optional[callable] = None,
+        check_interrupt: Optional[callable] = None,
     ) -> Dict[str, float]:
         """
         Train for one epoch.
@@ -193,6 +194,8 @@ class Trainer:
             log_interval: Log metrics every N global steps
             step_callback: Optional callback function called after each global step
                           Receives (trainer, loss) as arguments
+            check_interrupt: Optional callback to check if training should be interrupted
+                           Should return True if interrupted, False otherwise
         
         Returns:
             Dictionary with epoch statistics
@@ -216,6 +219,10 @@ class Trainer:
         accumulation_step = 0
         
         for batch_idx, batch in enumerate(dataloader):
+            # Check for interrupt
+            if check_interrupt is not None and check_interrupt():
+                break
+            
             # Check max steps
             if max_steps is not None and self.global_step >= max_steps:
                 break

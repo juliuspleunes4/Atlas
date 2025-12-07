@@ -21,6 +21,15 @@ All notable changes to Atlas will be documented in this file.
 - **PowerShell checkpoint path quoting**: Fixed checkpoint path being double-quoted in run_pipeline.ps1
   - Changed from building `--resume "path"` string to passing path variable directly
   - Resolves "unrecognized arguments" error when resuming
+- **Ctrl+C interrupt handling**: Fixed checkpoint not saving when pressing Ctrl+C during training
+  - Added `check_interrupt` callback to trainer's batch loop
+  - Trainer now checks for interrupt on every batch iteration
+  - Saves checkpoint immediately when interrupt detected
+  - Prevents duplicate interrupt messages
+  - Avoids saving multiple checkpoints (epoch + step + interrupt)
+- **Memory-mapped file cleanup**: Fixed "file in use" warning when exiting training
+  - Properly closes mmap file before unlinking
+  - Silently ignores cleanup errors (OS temp directory handles cleanup)
 
 ### Changed
 - **Progress bar display**: Training progress now shows global steps throughout entire training session
@@ -28,6 +37,11 @@ All notable changes to Atlas will be documented in this file.
   - After: Shows global steps (100-80000), continuous across epochs
   - Time estimate shows seconds per global step instead of seconds per batch
   - Makes progress tracking more intuitive for long training runs
+- **Interrupt checkpoint priority**: When interrupted, only saves one checkpoint instead of multiple
+  - Interrupt checkpoint takes priority over epoch and interval checkpoints
+  - Skips epoch checkpoint and validation when interrupted
+  - Reduces disk I/O and saves time when exiting
+  - Clean, fast exit on Ctrl+C
 
 ---
 

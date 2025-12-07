@@ -254,7 +254,9 @@ class TextDataset(Dataset):
         if self.use_mmap and self.mmap_file:
             try:
                 mmap_path = self.mmap_file.name
+                self.mmap_file.close()  # Close the file before unlinking
                 if os.path.exists(mmap_path):
                     os.unlink(mmap_path)
             except Exception as e:
-                logger.warning(f"Failed to cleanup mmap file: {e}")
+                # Silently ignore cleanup errors - file will be cleaned by OS temp directory
+                pass

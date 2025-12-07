@@ -147,11 +147,12 @@ def setup_logging(output_dir: str, resume_checkpoint: Optional[str] = None):
 def signal_handler(sig, frame):
     """Handle Ctrl+C interrupt."""
     global interrupted, logger
-    msg = "\n\n[!] Interrupt received. Saving checkpoint and exiting gracefully..."
-    print(msg)
-    if logger:
-        logger.info(msg)
-    interrupted = True
+    if not interrupted:  # Only handle first interrupt
+        msg = "\n\n[!] Interrupt received. Saving checkpoint and exiting gracefully..."
+        print(msg)
+        if logger:
+            logger.info(msg)
+        interrupted = True
 
 
 def parse_args():
@@ -632,12 +633,13 @@ def main():
             logger.info(f">>> EPOCH {epoch} | Step {trainer.global_step}/{max_steps}")
             logger.info(f"{'='*80}")
             
-            # Train for one epoch with checkpoint callback
+            # Train for one epoch with checkpoint callback and interrupt checker
             train_stats = trainer.train_epoch(
                 train_loader,
                 max_steps=max_steps,
                 log_interval=args.log_interval,
                 step_callback=checkpoint_callback,
+                check_interrupt=lambda: interrupted,
             )
             
             epoch_time = time.time() - epoch_start_time
@@ -671,29 +673,30 @@ def main():
                 logger.info(f"  GPU memory: {memory_allocated:.2f}GB allocated, {memory_reserved:.2f}GB reserved")
             logger.info(f"{'-'*80}")
             
-            # Save epoch checkpoint (always at end of epoch)
-            logger.info(f"\n{'-'*80}")
-            logger.info("Saving epoch checkpoint...")
-            epoch_metadata = CheckpointMetadata(
-                step=trainer.global_step,
-                epoch=epoch,
-                loss=train_stats['loss'],
-                perplexity=train_stats['perplexity'],
-                learning_rate=optimizer.param_groups[0]['lr'],
-            )
-            epoch_checkpoint_path = checkpoint_manager.save_checkpoint(
-                model,
-                optimizer,
-                epoch_metadata,
-                scheduler=scheduler,
-                is_best=False,
-                is_epoch_end=True,
-            )
-            logger.info(f"  [SAVED] Epoch checkpoint: {epoch_checkpoint_path}")
-            logger.info(f"{'-'*80}")
+            # Save epoch checkpoint (only if not interrupted)
+            if not interrupted:
+                logger.info(f"\n{'-'*80}")
+                logger.info("Saving epoch checkpoint...")
+                epoch_metadata = CheckpointMetadata(
+                    step=trainer.global_step,
+                    epoch=epoch,
+                    loss=train_stats['loss'],
+                    perplexity=train_stats['perplexity'],
+                    learning_rate=optimizer.param_groups[0]['lr'],
+                )
+                epoch_checkpoint_path = checkpoint_manager.save_checkpoint(
+                    model,
+                    optimizer,
+                    epoch_metadata,
+                    scheduler=scheduler,
+                    is_best=False,
+                    is_epoch_end=True,
+                )
+                logger.info(f"  [SAVED] Epoch checkpoint: {epoch_checkpoint_path}")
+                logger.info(f"{'-'*80}")
             
             # Evaluate on validation set
-            if val_loader and (trainer.global_step % args.eval_interval == 0 or interrupted):
+            if val_loader and not interrupted and trainer.global_step % args.eval_interval == 0:
                 logger.info(f"\n{'-'*80}")
                 logger.info("Running validation...")
                 val_start = time.time()
@@ -717,8 +720,35 @@ def main():
                 val_stats = None
                 is_best = False
             
+            # Check if interrupted before saving regular checkpoints
+            if interrupted:
+                # Save checkpoint on interrupt
+                logger.info(f"\n{'-'*80}")
+                logger.info(f"Saving checkpoint on interrupt at step {trainer.global_step}...")
+                interrupt_metadata = CheckpointMetadata(
+                    step=trainer.global_step,
+                    epoch=epoch,
+                    loss=train_stats['loss'],
+                    perplexity=train_stats['perplexity'],
+                    learning_rate=optimizer.param_groups[0]['lr'],
+                )
+                interrupt_checkpoint_path = checkpoint_manager.save_checkpoint(
+                    model,
+                    optimizer,
+                    interrupt_metadata,
+                    scheduler=scheduler,
+                    is_best=False,
+                    is_epoch_end=False,
+                )
+                logger.info(f"  [SAVED] Interrupt checkpoint: {interrupt_checkpoint_path}")
+                logger.info(f"  [SAVED]   Step: {interrupt_metadata.step}, Epoch: {interrupt_metadata.epoch}")
+                logger.info(f"  [SAVED]   Loss: {interrupt_metadata.loss:.4f}, Perplexity: {interrupt_metadata.perplexity:.2f}")
+                logger.info(f"  [SAVED]   Learning Rate: {interrupt_metadata.learning_rate:.2e}")
+                logger.info(f"{'-'*80}")
+                break
+            
             # Save step-based checkpoint (time-based interval)
-            if trainer.global_step % auto_save_interval == 0 or interrupted:
+            if trainer.global_step % auto_save_interval == 0:
                 logger.info(f"\n{'-'*80}")
                 logger.info("Saving step checkpoint...")
                 metadata = CheckpointMetadata(
@@ -742,10 +772,6 @@ def main():
                 if is_best:
                     logger.info(f"  [BEST] Best model saved (always kept)")
                 logger.info(f"{'-'*80}")
-            
-            # Check if interrupted
-            if interrupted:
-                break
         
         # Training complete
         if not interrupted:
