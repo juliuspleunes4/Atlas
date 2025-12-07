@@ -2,7 +2,7 @@
 
 ## Overview
 
-Atlas maintains a comprehensive test suite with **307+ tests** covering all major components. This guide explains our testing philosophy, how to run tests, and how to write new tests.
+Atlas maintains a comprehensive test suite with **310+ tests** covering all major components. This guide explains our testing philosophy, how to run tests, and how to write new tests.
 
 ## Testing Philosophy
 
@@ -487,7 +487,7 @@ Tests run automatically on:
 ### CI Requirements
 
 All tests must pass before merging:
-- ✅ All 307+ tests pass
+- ✅ All 310+ tests pass
 - ✅ No warnings or errors
 - ✅ Coverage remains above 90%
 - ✅ No flaky tests (inconsistent pass/fail)

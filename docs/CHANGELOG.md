@@ -4,6 +4,31 @@ All notable changes to Atlas will be documented in this file.
 
 ---
 
+## [Unreleased] - 2025-12-07 - Config Loading Improvements
+
+### Added
+- **Strict config loading in train.py**: Training script now uses `atlas.config.load_config()` for type-safe, validated configuration loading instead of raw YAML dict access
+- **Advanced training time estimator**: New `estimate_training_time.py` script that performs comprehensive benchmarking with:
+  - Thermal throttling detection
+  - Checkpoint overhead measurement
+  - Validation time estimation
+  - First epoch overhead calculation
+  - Timeline predictions with completion dates
+- **3 new comprehensive tests** for config loading validation (total: 310 passing tests)
+
+### Changed
+- `TrainingConfig` now supports all YAML field names with proper aliases (`max_grad_norm`, `scheduler_type`, `gradient_checkpointing`, `keep_checkpoints`)
+- `DataConfig` enhanced with `max_seq_len` and `num_workers` support from YAML configs
+- All config field aliases properly synced in `__post_init__` methods
+- Training script now uses attribute access (`config.training.learning_rate`) instead of dict access (`config['training']['learning_rate']`)
+
+### Fixed
+- Config validation now happens at load time, catching errors before training starts
+- Duplicate `num_workers` field in `DataConfig` removed
+- Sequence length synchronization between `max_seq_len` and `sequence_length`
+
+---
+
 ## [v1.0.0] - 2025-12-07 - First Stable Release 🎉
 
 **Major Milestone**: Atlas v1.0.0 represents the first complete, production-ready release of the from-scratch language model implementation.
@@ -64,7 +89,7 @@ All notable changes to Atlas will be documented in this file.
 
 ### 📊 Statistics
 
-- **307 passing tests** across all components
+- **310 passing tests** across all components
 - **6 model configurations** (40M to 500M parameters)
 - **10 comprehensive documentation files**
 - **Clean, modular codebase** with 94%+ coverage on core modules
@@ -127,7 +152,7 @@ This release represents the culmination of comprehensive development work across
   - `run_pipeline.sh` (Bash): Checkpoint detection with JSON metadata parsing
   - User-friendly y/n prompts with input validation
 
-- **New tests for auto-resume** (6 new tests, total: 307 passing)
+- **New tests for auto-resume** (6 new tests, total: 310 passing)
   - `test_find_latest_checkpoint_empty_dir`: Handles empty checkpoint directory
   - `test_find_latest_checkpoint`: Finds most recent by timestamp
   - `test_find_latest_checkpoint_excludes_best`: Correctly excludes best.pt

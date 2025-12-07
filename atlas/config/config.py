@@ -62,16 +62,21 @@ class TrainingConfig:
     beta1: float = 0.9
     beta2: float = 0.95
     grad_clip: float = 1.0
+    max_grad_norm: float = 1.0  # Alias for grad_clip (used in YAML)
     
     # Schedule
     warmup_steps: int = 1000
     max_steps: int = 100000
     lr_schedule: str = "cosine"  # cosine, linear, constant
+    scheduler_type: str = "cosine"  # Alias for lr_schedule (used in YAML)
     min_lr_ratio: float = 0.1  # min_lr = learning_rate * min_lr_ratio
     
     # Batch settings
     batch_size: int = 32
     gradient_accumulation_steps: int = 1
+    
+    # Memory optimization
+    gradient_checkpointing: bool = False  # Trade compute for memory
     
     # Mixed precision
     use_amp: bool = False  # Automatic mixed precision
@@ -80,8 +85,25 @@ class TrainingConfig:
     eval_interval: int = 1000
     eval_steps: int = 100
     
+    # Checkpointing
+    keep_checkpoints: int = 3  # Number of step-based checkpoints to keep
+    
     def __post_init__(self):
         """Validate configuration after initialization."""
+        # Sync aliases - prefer the non-default value
+        # If scheduler_type was explicitly set (differs from default), use it
+        if self.scheduler_type != "cosine" and self.lr_schedule == "cosine":
+            self.lr_schedule = self.scheduler_type
+        # Otherwise sync the other way
+        elif self.lr_schedule != "cosine" and self.scheduler_type == "cosine":
+            self.scheduler_type = self.lr_schedule
+            
+        # Sync grad clip
+        if self.max_grad_norm != 1.0 and self.grad_clip == 1.0:
+            self.grad_clip = self.max_grad_norm
+        elif self.grad_clip != 1.0 and self.max_grad_norm == 1.0:
+            self.max_grad_norm = self.grad_clip
+            
         if self.learning_rate <= 0:
             raise ValueError(f"learning_rate must be positive, got {self.learning_rate}")
         if self.batch_size <= 0:
@@ -114,15 +136,22 @@ class DataConfig:
     tokenizer_path: Optional[str] = None  # TODO: Set actual path
     
     # Data processing
-    num_workers: int = 4
+    num_workers: int = 2  # Number of dataloader workers
     prefetch_factor: int = 2
     pin_memory: bool = True
     
     # Sequence settings
-    sequence_length: int = 1024  # Must match ModelConfig.max_seq_len
+    max_seq_len: int = 1024  # Maximum sequence length (used in YAML configs)
+    sequence_length: int = 1024  # Alias for max_seq_len (used internally)
     
     def __post_init__(self):
         """Validate configuration after initialization."""
+        # Sync max_seq_len and sequence_length
+        if self.max_seq_len != 1024 and self.sequence_length == 1024:
+            self.sequence_length = self.max_seq_len
+        elif self.sequence_length != 1024 and self.max_seq_len == 1024:
+            self.max_seq_len = self.sequence_length
+            
         if self.num_workers < 0:
             raise ValueError(f"num_workers must be >= 0, got {self.num_workers}")
 

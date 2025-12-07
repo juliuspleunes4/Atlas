@@ -21,9 +21,8 @@ from pathlib import Path
 from typing import Optional
 
 import torch
-import yaml
 
-from atlas.config import ModelConfig
+from atlas.config import load_config, AtlasConfig
 from atlas.model import AtlasLM
 from atlas.tokenizer import Tokenizer
 from atlas.data import TextDataset, create_dataloader
@@ -246,29 +245,12 @@ def parse_args():
     return parser.parse_args()
 
 
-def load_config(config_path: str) -> dict:
-    """Load configuration from YAML file."""
-    with open(config_path, 'r') as f:
-        config = yaml.safe_load(f)
-    return config
+def create_model_from_config(config: AtlasConfig) -> AtlasLM:
+    """Create model from configuration."""
+    return AtlasLM(config.model)
 
 
-def create_model_from_config(config: dict) -> AtlasLM:
-    """Create model from configuration dictionary."""
-    model_config = ModelConfig(
-        vocab_size=config['model']['vocab_size'],
-        max_seq_len=config['model']['max_seq_len'],
-        hidden_size=config['model']['hidden_size'],
-        num_layers=config['model']['num_layers'],
-        num_heads=config['model']['num_heads'],
-        mlp_ratio=config['model'].get('mlp_ratio', 4.0),
-        dropout=config['model'].get('dropout', 0.1),
-    )
-    
-    return AtlasLM(model_config)
-
-
-def create_datasets(train_paths: str, val_paths: Optional[str], tokenizer: Tokenizer, config: dict):
+def create_datasets(train_paths: str, val_paths: Optional[str], tokenizer: Tokenizer, config: AtlasConfig):
     """Create train and validation datasets."""
     from pathlib import Path
     
@@ -289,7 +271,7 @@ def create_datasets(train_paths: str, val_paths: Optional[str], tokenizer: Token
     train_dataset = TextDataset(
         file_paths=train_files,
         tokenizer=tokenizer,
-        max_seq_len=config['data']['max_seq_len'],
+        max_seq_len=config.data.max_seq_len,
     )
     
     val_dataset = None
@@ -307,7 +289,7 @@ def create_datasets(train_paths: str, val_paths: Optional[str], tokenizer: Token
             val_dataset = TextDataset(
                 file_paths=val_files,
                 tokenizer=tokenizer,
-                max_seq_len=config['data']['max_seq_len'],
+                max_seq_len=config.data.max_seq_len,
         )
     
     return train_dataset, val_dataset
@@ -375,28 +357,28 @@ def main():
     # Load configuration
     logger.info("\n[1/6] Loading configuration...")
     config = load_config(args.config)
-    logger.info(f"  Model: {config['model']['num_layers']} layers, {config['model']['hidden_size']} hidden, {config['model']['num_heads']} heads")
-    logger.info(f"  Sequence length: {config['model']['max_seq_len']}")
-    logger.info(f"  Batch size: {config['training']['batch_size']}")
-    logger.info(f"  Max steps: {config['training']['max_steps']}")
+    logger.info(f"  Model: {config.model.num_layers} layers, {config.model.hidden_size} hidden, {config.model.num_heads} heads")
+    logger.info(f"  Sequence length: {config.model.max_seq_len}")
+    logger.info(f"  Batch size: {config.training.batch_size}")
+    logger.info(f"  Max steps: {config.training.max_steps}")
     
     # Apply command-line overrides
     if args.learning_rate:
-        config['training']['learning_rate'] = args.learning_rate
+        config.training.learning_rate = args.learning_rate
         logger.info(f"  Override: learning_rate = {args.learning_rate}")
     if args.batch_size:
-        config['training']['batch_size'] = args.batch_size
+        config.training.batch_size = args.batch_size
         logger.info(f"  Override: batch_size = {args.batch_size}")
     if args.max_steps:
-        config['training']['max_steps'] = args.max_steps
+        config.training.max_steps = args.max_steps
         logger.info(f"  Override: max_steps = {args.max_steps}")
     
     # Initialize tokenizer
     logger.info("\n[2/6] Initializing tokenizer...")
     tokenizer = Tokenizer(
-        encoding_name=config['tokenizer'].get('encoding', config['tokenizer']['name']),
+        encoding_name=config.tokenizer.encoding,
     )
-    logger.info(f"  Tokenizer: {config['tokenizer']['name']}")
+    logger.info(f"  Tokenizer: {config.tokenizer.name}")
     logger.info(f"  Vocab size: {tokenizer.vocab_size:,}")
     
     # Create model
@@ -419,14 +401,14 @@ def main():
         # Create optimizer and scheduler (will be loaded from checkpoint)
         optimizer = create_optimizer(
             model,
-            learning_rate=config['training']['learning_rate'],
-            weight_decay=config['training'].get('weight_decay', 0.01),
+            learning_rate=config.training.learning_rate,
+            weight_decay=config.training.weight_decay,
         )
         scheduler = create_scheduler(
             optimizer,
-            num_training_steps=config['training']['max_steps'],
-            num_warmup_steps=config['training'].get('warmup_steps', 0),
-            scheduler_type=config['training'].get('scheduler_type', 'cosine'),
+            num_training_steps=config.training.max_steps,
+            num_warmup_steps=config.training.warmup_steps,
+            scheduler_type=config.training.scheduler_type,
         )
         
         metadata = checkpoint_manager.load_checkpoint(
@@ -462,9 +444,9 @@ def main():
     # Create dataloaders
     train_loader = create_dataloader(
         train_dataset,
-        batch_size=config['training']['batch_size'],
+        batch_size=config.training.batch_size,
         shuffle=True,
-        num_workers=config['data'].get('num_workers', 0),
+        num_workers=config.data.num_workers,
     )
     logger.info(f"  Train batches per epoch: {len(train_loader):,}")
     
@@ -472,9 +454,9 @@ def main():
     if val_dataset:
         val_loader = create_dataloader(
             val_dataset,
-            batch_size=config['training']['batch_size'],
+            batch_size=config.training.batch_size,
             shuffle=False,
-            num_workers=config['data'].get('num_workers', 0),
+            num_workers=config.data.num_workers,
         )
         logger.info(f"  Val batches: {len(val_loader):,}")
     
@@ -483,14 +465,14 @@ def main():
     if not args.resume:
         optimizer = create_optimizer(
             model,
-            learning_rate=config['training']['learning_rate'],
-            weight_decay=config['training'].get('weight_decay', 0.01),
+            learning_rate=config.training.learning_rate,
+            weight_decay=config.training.weight_decay,
         )
         scheduler = create_scheduler(
             optimizer,
-            num_training_steps=config['training']['max_steps'],
-            num_warmup_steps=config['training'].get('warmup_steps', 0),
-            scheduler_type=config['training'].get('scheduler_type', 'cosine'),
+            num_training_steps=config.training.max_steps,
+            num_warmup_steps=config.training.warmup_steps,
+            scheduler_type=config.training.scheduler_type,
         )
     
     # Create trainer
@@ -498,8 +480,8 @@ def main():
         model=model,
         optimizer=optimizer,
         scheduler=scheduler,
-        gradient_accumulation_steps=config['training'].get('gradient_accumulation_steps', 1),
-        max_grad_norm=config['training'].get('max_grad_norm', 1.0),
+        gradient_accumulation_steps=config.training.gradient_accumulation_steps,
+        max_grad_norm=config.training.max_grad_norm,
         device=args.device,
     )
     
@@ -512,24 +494,24 @@ def main():
         checkpoint_dir=args.output_dir,
         model_name='atlas',
         keep_best=True,
-        keep_last_n=config['training'].get('keep_checkpoints', 3),  # Step-based checkpoints
+        keep_last_n=config.training.keep_checkpoints,  # Step-based checkpoints
         keep_last_epochs=5,  # Keep last 5 epoch checkpoints
     )
     
     logger.info(f"  Optimizer: AdamW")
-    logger.info(f"  Learning rate: {config['training']['learning_rate']}")
-    logger.info(f"  Weight decay: {config['training'].get('weight_decay', 0.01)}")
-    logger.info(f"  Scheduler: {config['training'].get('scheduler_type', 'cosine')}")
-    logger.info(f"  Warmup steps: {config['training'].get('warmup_steps', 0):,}")
-    logger.info(f"  Gradient accumulation: {config['training'].get('gradient_accumulation_steps', 1)}")
-    logger.info(f"  Max grad norm: {config['training'].get('max_grad_norm', 1.0)}")
-    logger.info(f"  Effective batch size: {config['training']['batch_size'] * config['training'].get('gradient_accumulation_steps', 1)}")
+    logger.info(f"  Learning rate: {config.training.learning_rate}")
+    logger.info(f"  Weight decay: {config.training.weight_decay}")
+    logger.info(f"  Scheduler: {config.training.scheduler_type}")
+    logger.info(f"  Warmup steps: {config.training.warmup_steps:,}")
+    logger.info(f"  Gradient accumulation: {config.training.gradient_accumulation_steps}")
+    logger.info(f"  Max grad norm: {config.training.max_grad_norm}")
+    logger.info(f"  Effective batch size: {config.training.batch_size * config.training.gradient_accumulation_steps}")
     
     # Estimate training time
-    total_tokens = len(train_dataset) * config['model']['max_seq_len']
-    tokens_per_step = config['training']['batch_size'] * config['model']['max_seq_len'] * config['training'].get('gradient_accumulation_steps', 1)
-    steps_per_epoch = len(train_dataset) // config['training']['batch_size']
-    estimated_epochs = (config['training']['max_steps'] - start_step) / steps_per_epoch
+    total_tokens = len(train_dataset) * config.model.max_seq_len
+    tokens_per_step = config.training.batch_size * config.model.max_seq_len * config.training.gradient_accumulation_steps
+    steps_per_epoch = len(train_dataset) // config.training.batch_size
+    estimated_epochs = (config.training.max_steps - start_step) / steps_per_epoch
     logger.info(f"  Steps per epoch: ~{steps_per_epoch:,}")
     logger.info(f"  Estimated epochs to complete: ~{estimated_epochs:.1f}")
     logger.info(f"  Tokens per step: {tokens_per_step:,}")
@@ -542,14 +524,14 @@ def main():
     # Training loop
     logger.info("\n[6/6] Starting training...")
     logger.info("=" * 80)
-    logger.info(f"Training from step {start_step} to {config['training']['max_steps']}")
+    logger.info(f"Training from step {start_step} to {config.training.max_steps}")
     logger.info(f"Logging interval: every {args.log_interval} steps")
     logger.info(f"Eval interval: every {args.eval_interval} steps")
     logger.info(f"Save interval: every {auto_save_interval} steps (will auto-adjust for ~10 min)")
     logger.info(f"Epoch checkpoints: saved at end of each epoch (keep last 5)")
     logger.info("=" * 80)
     
-    max_steps = config['training']['max_steps']
+    max_steps = config.training.max_steps
     epoch = start_epoch
     best_val_loss = float('inf')
     training_start_time = time.time()
@@ -570,7 +552,7 @@ def main():
             )
             
             epoch_time = time.time() - epoch_start_time
-            tokens_processed = len(train_dataset) * config['model']['max_seq_len']
+            tokens_processed = len(train_dataset) * config.model.max_seq_len
             tokens_per_sec = tokens_processed / epoch_time
             
             # Auto-adjust save_interval after first epoch for ~10 minute intervals

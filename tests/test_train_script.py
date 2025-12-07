@@ -9,11 +9,11 @@ import yaml
 import torch
 
 from scripts.train import (
-    load_config,
     create_model_from_config,
     create_datasets,
     setup_logging,
 )
+from atlas.config import load_config
 from atlas.tokenizer import Tokenizer
 
 
@@ -93,22 +93,24 @@ class TestConfigLoading:
         """Test loading config from YAML file."""
         config = load_config(config_file)
         
-        assert config['model']['vocab_size'] == sample_config['model']['vocab_size']
-        assert config['model']['hidden_size'] == sample_config['model']['hidden_size']
-        assert config['training']['learning_rate'] == sample_config['training']['learning_rate']
+        assert config.model.vocab_size == sample_config['model']['vocab_size']
+        assert config.model.hidden_size == sample_config['model']['hidden_size']
+        assert config.training.learning_rate == sample_config['training']['learning_rate']
     
-    def test_create_model_from_config(self, sample_config):
+    def test_create_model_from_config(self, config_file):
         """Test creating model from config."""
-        model = create_model_from_config(sample_config)
+        config = load_config(config_file)
+        model = create_model_from_config(config)
         
         assert model.config.vocab_size == 50261
         assert model.config.hidden_size == 256
         assert model.config.num_layers == 4
         assert model.config.num_heads == 4
     
-    def test_model_parameters(self, sample_config):
+    def test_model_parameters(self, config_file):
         """Test model has correct number of parameters."""
-        model = create_model_from_config(sample_config)
+        config = load_config(config_file)
+        model = create_model_from_config(config)
         
         num_params = sum(p.numel() for p in model.parameters())
         assert num_params > 0
@@ -116,45 +118,113 @@ class TestConfigLoading:
         # Check all parameters are trainable
         trainable_params = sum(p.numel() for p in model.parameters() if p.requires_grad)
         assert trainable_params == num_params
+    
+    def test_config_attribute_access_not_dict(self, config_file):
+        """Test that loaded config is AtlasConfig object, not dict."""
+        config = load_config(config_file)
+        
+        # Verify it's an AtlasConfig object with attribute access
+        from atlas.config import AtlasConfig
+        assert isinstance(config, AtlasConfig)
+        
+        # Verify attribute access works (not dict access)
+        assert hasattr(config, 'model')
+        assert hasattr(config, 'training')
+        assert hasattr(config, 'data')
+        assert hasattr(config, 'logging')
+        assert hasattr(config, 'inference')
+        
+        # Verify nested attribute access works
+        assert hasattr(config.model, 'vocab_size')
+        assert hasattr(config.model, 'hidden_size')
+        assert hasattr(config.training, 'learning_rate')
+        assert hasattr(config.training, 'batch_size')
+        assert hasattr(config.data, 'max_seq_len')
+        assert hasattr(config.data, 'num_workers')
+        
+        # Verify dict-style access raises TypeError (proving it's not a dict)
+        with pytest.raises(TypeError):
+            _ = config['model']
+    
+    def test_config_validation_on_load(self, config_file):
+        """Test that config validation happens during load."""
+        config = load_config(config_file)
+        
+        # Verify validation worked - these should all be valid
+        assert config.model.hidden_size % config.model.num_heads == 0
+        assert config.training.learning_rate > 0
+        assert config.training.batch_size > 0
+        assert config.training.gradient_accumulation_steps > 0
+        assert config.training.lr_schedule in ['cosine', 'linear', 'constant']
+        
+        # Verify aliases are synced
+        assert config.training.grad_clip == config.training.max_grad_norm
+        assert config.training.lr_schedule == config.training.scheduler_type
+        assert config.data.max_seq_len == config.data.sequence_length
+        assert config.data.max_seq_len == config.model.max_seq_len
+    
+    def test_config_type_safety(self, config_file):
+        """Test that config fields have correct types."""
+        config = load_config(config_file)
+        
+        # Model config types
+        assert isinstance(config.model.vocab_size, int)
+        assert isinstance(config.model.hidden_size, int)
+        assert isinstance(config.model.num_layers, int)
+        assert isinstance(config.model.dropout, float)
+        
+        # Training config types
+        assert isinstance(config.training.learning_rate, float)
+        assert isinstance(config.training.batch_size, int)
+        assert isinstance(config.training.max_steps, int)
+        assert isinstance(config.training.scheduler_type, str)
+        assert isinstance(config.training.gradient_checkpointing, bool)
+        
+        # Data config types
+        assert isinstance(config.data.max_seq_len, int)
+        assert isinstance(config.data.num_workers, int)
 
 
 class TestDatasetCreation:
     """Test dataset creation."""
     
-    def test_create_train_dataset(self, sample_data, sample_config):
+    def test_create_train_dataset(self, sample_data, config_file):
         """Test creating training dataset."""
         train_path, _ = sample_data
         tokenizer = Tokenizer('gpt2')
+        config = load_config(config_file)
         
         train_dataset, val_dataset = create_datasets(
             train_path,
             None,
             tokenizer,
-            sample_config,
+            config,
         )
         
         assert len(train_dataset) > 0
         assert val_dataset is None
     
-    def test_create_train_and_val_datasets(self, sample_data, sample_config):
+    def test_create_train_and_val_datasets(self, sample_data, config_file):
         """Test creating both training and validation datasets."""
         train_path, val_path = sample_data
         tokenizer = Tokenizer('gpt2')
+        config = load_config(config_file)
         
         train_dataset, val_dataset = create_datasets(
             train_path,
             val_path,
             tokenizer,
-            sample_config,
+            config,
         )
         
         assert len(train_dataset) > 0
         assert len(val_dataset) > 0
     
-    def test_create_dataset_with_multiple_files(self, sample_data, sample_config):
+    def test_create_dataset_with_multiple_files(self, sample_data, config_file):
         """Test creating dataset with comma-separated paths."""
         train_path, val_path = sample_data
         tokenizer = Tokenizer('gpt2')
+        config = load_config(config_file)
         
         # Use same file twice
         train_paths = f"{train_path},{train_path}"
@@ -163,7 +233,7 @@ class TestDatasetCreation:
             train_paths,
             None,
             tokenizer,
-            sample_config,
+            config,
         )
         
         # Should have data from both files
