@@ -57,7 +57,7 @@ Atlas provides multiple pre-configured model sizes optimized for different hardw
 | **DEFAULT** | ~350M | 24 | 1024 | 16 | 1024 | 16 (×2 accum) | 12-14 GB | **Recommended** for most users |
 | **LARGE** | ~500M | 30 | 1280 | 20 | 1024 | 8 (×4 accum) | 14-15 GB | Maximum quality, high-end GPUs |
 | **XLARGE** | ~500M | 30 | 1280 | 20 | 1024 | 2 (×16 accum) | 8-10 GB | Max params with memory safety |
-| **ULTRA** | ~500M | 30 | 1280 | 20 | 256 | 1 (×64 accum) | 3-5 GB | **Cool & Quiet** - Low GPU temp |
+| **ULTRA** | ~650M | 30 | 1280 | 20 | 256 | 1 (×16 accum) | 3-5 GB | **Cool & Quiet** - Low GPU temp |
 
 **Configuration Details:**
 
