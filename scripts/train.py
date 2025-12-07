@@ -222,6 +222,11 @@ def parse_args():
         help="Path to checkpoint to resume from",
     )
     parser.add_argument(
+        "--no-resume",
+        action="store_true",
+        help="Skip checkpoint detection and start fresh training (used by run_pipeline scripts)",
+    )
+    parser.add_argument(
         "--device",
         type=str,
         default="cuda" if torch.cuda.is_available() else "cpu",
@@ -309,8 +314,9 @@ def main():
     checkpoint_manager_temp = CheckpointManager(args.output_dir)
     latest_checkpoint = checkpoint_manager_temp.find_latest_checkpoint()
     
-    if latest_checkpoint and not args.resume:
-        # Found checkpoint but user didn't specify --resume
+    # Only prompt if checkpoint exists, user didn't specify --resume, and --no-resume wasn't set
+    if latest_checkpoint and not args.resume and not args.no_resume:
+        # Found checkpoint but user didn't specify --resume or --no-resume
         checkpoint_info = checkpoint_manager_temp.get_checkpoint_info(latest_checkpoint)
         
         print("\n" + "=" * 80)

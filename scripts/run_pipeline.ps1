@@ -274,7 +274,7 @@ if (Test-Path $checkpointDir) {
             $resumeFlag = "--resume `"$($latestCheckpoint.FullName)`""
         } else {
             Write-Info "Starting fresh training session"
-            $resumeFlag = ""
+            $resumeFlag = "--no-resume"
         }
         Write-Host ""
     } else {

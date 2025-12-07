@@ -239,6 +239,7 @@ if [ -d "$CHECKPOINT_DIR" ]; then
                 break
             elif [ "$RESUME_RESPONSE" = "n" ]; then
                 info "Starting fresh training session"
+                RESUME_FLAG="--no-resume"
                 break
             else
                 echo "Please enter 'y' or 'n'"
