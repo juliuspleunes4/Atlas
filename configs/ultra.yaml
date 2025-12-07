@@ -38,7 +38,7 @@ training:
   scheduler_type: "cosine"
   
   gradient_checkpointing: true  # Trade compute for memory (lowers GPU load)
-  keep_checkpoints: 2        # Number of step-based checkpoints to keep (epoch checkpoints kept separately)
+  keep_checkpoints: 5        # Number of step-based checkpoints to keep (epoch checkpoints kept separately)
 
 # EXTREME MEMORY + LOW GPU LOAD OPTIMIZATION:
 # - 656M parameter model (30 layers × 1280 hidden)
