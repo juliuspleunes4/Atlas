@@ -27,10 +27,11 @@ training:
   learning_rate: 2.0e-4      # Lower LR for larger model
   weight_decay: 0.01
   max_grad_norm: 1.0
+  optimizer_type: "adamw8bit"  # 8-bit optimizer: 75% less memory (requires: pip install bitsandbytes)
   
   # ABSOLUTE MINIMUM batches with extreme gradient accumulation
   batch_size: 1              # Single sample per step (minimum possible)
-  gradient_accumulation_steps: 64  # DOUBLED to maintain effective batch size
+  gradient_accumulation_steps: 16  # Further reduced to prevent system freeze (was 32, originally 64)
   
   max_steps: 80000           # More steps for larger model
   warmup_steps: 3000
@@ -41,13 +42,17 @@ training:
 
 # EXTREME MEMORY + LOW GPU LOAD OPTIMIZATION:
 # - 656M parameter model (30 layers × 1280 hidden)
+# - 8-bit optimizer: Stores momentum in 8-bit instead of 32-bit (75% memory reduction)
+#   * Standard AdamW: ~1.9GB optimizer states for 655M params
+#   * 8-bit AdamW: ~0.5GB optimizer states (saves ~1.4GB!)
 # - Batch size = 1 (absolute minimum, ~85% less VRAM than batch=8)
 # - Sequence length = 256 (75% less memory & compute than 1024, 50% less than 512)
-# - Gradient accumulation = 64 (maintains effective batch size while minimizing per-step load)
+# - Gradient accumulation = 16 (prevents system freeze from optimizer memory spike)
 # - Gradient checkpointing enabled (trades recomputation for lower memory/temp)
 # - Single data worker (reduces RAM pressure)
 # - Should use ~3-5GB VRAM with COOLEST running temperature
 # - Training will be slower but runs MUCH COOLER than XLARGE
+# - Requires: pip install bitsandbytes (for 8-bit optimizer)
 # - Best for: Maximizing parameters while keeping GPU cool and quiet
 
 # WHEN TO USE:

@@ -252,6 +252,10 @@ def parse_args():
 
 def create_model_from_config(config: AtlasConfig) -> AtlasLM:
     """Create model from configuration."""
+    # Copy gradient checkpointing setting from training config to model config
+    # This allows it to be specified in either place in YAML files
+    if hasattr(config.training, 'gradient_checkpointing'):
+        config.model.gradient_checkpointing = config.training.gradient_checkpointing
     return AtlasLM(config.model)
 
 
@@ -275,6 +279,8 @@ def create_datasets(train_paths: str, val_paths: Optional[str], tokenizer: Token
     
     # Use memory-mapped files for large datasets (>20M tokens) to reduce RAM usage
     use_mmap = config.training.batch_size == 1  # Enable for extreme memory optimization
+    if use_mmap:
+        logger.info("  Memory-mapped storage enabled (low RAM mode)")
     
     train_dataset = TextDataset(
         file_paths=train_files,
@@ -400,6 +406,10 @@ def main():
     logger.info(f"  Model size: ~{num_params * 4 / 1024 / 1024:.2f} MB (fp32)")
     logger.info(f"  Model size: ~{num_params * 2 / 1024 / 1024:.2f} MB (fp16)")
     
+    # Gradient checkpointing is enabled via config during model creation
+    if config.training.gradient_checkpointing:
+        logger.info(f"  Gradient checkpointing enabled (reduced memory usage)")
+    
     # Load checkpoint if resuming
     start_step = 0
     start_epoch = 0
@@ -412,6 +422,8 @@ def main():
             model,
             learning_rate=config.training.learning_rate,
             weight_decay=config.training.weight_decay,
+            optimizer_type=config.training.optimizer_type,
+            momentum=config.training.momentum,
         )
         scheduler = create_scheduler(
             optimizer,
@@ -460,12 +472,16 @@ def main():
         torch.cuda.empty_cache()
     
     # Create dataloaders
+    # Disable shuffle for batch_size=1 to reduce memory overhead
+    use_shuffle = config.training.batch_size > 1
     train_loader = create_dataloader(
         train_dataset,
         batch_size=config.training.batch_size,
-        shuffle=True,
+        shuffle=use_shuffle,
         num_workers=config.data.num_workers,
     )
+    if not use_shuffle:
+        logger.info("  Shuffle disabled for extreme memory optimization")
     logger.info(f"  Train batches per epoch: {len(train_loader):,}")
     
     val_loader = None
@@ -485,6 +501,8 @@ def main():
             model,
             learning_rate=config.training.learning_rate,
             weight_decay=config.training.weight_decay,
+            optimizer_type=config.training.optimizer_type,
+            momentum=config.training.momentum,
         )
         scheduler = create_scheduler(
             optimizer,
@@ -506,6 +524,12 @@ def main():
     # Set starting step if resuming
     if args.resume:
         trainer.global_step = start_step
+    
+    # Enable aggressive memory management for extreme optimization
+    if config.training.batch_size == 1:
+        import gc
+        gc.set_threshold(700, 10, 10)  # More aggressive garbage collection
+        logger.info("  Aggressive garbage collection enabled")
     
     # Create checkpoint manager
     checkpoint_manager = CheckpointManager(

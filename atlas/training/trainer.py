@@ -118,30 +118,57 @@ class Trainer:
         # Scale loss by accumulation steps
         scaled_loss = loss / self.gradient_accumulation_steps
         
+        # Save loss value before any deletions
+        loss_value = loss.item()
+        
         # Backward pass
         scaled_loss.backward()
+        
+        # Free memory immediately after backward
+        del scaled_loss
         
         # Update on last accumulation step
         is_last_accumulation = (accumulation_step + 1) == self.gradient_accumulation_steps
         if is_last_accumulation:
+            # Clear memory BEFORE optimizer step to prevent spike
+            if self.device == 'cuda' or (hasattr(self.device, 'type') and self.device.type == 'cuda'):
+                torch.cuda.empty_cache()
+            
             # Clip gradients if enabled
             if self.max_grad_norm is not None:
                 clip_gradients(self.model, self.max_grad_norm)
             
-            # Optimizer step
+            # Optimizer step (this causes the memory spike)
             self.optimizer.step()
             
             # Scheduler step
             if self.scheduler is not None:
                 self.scheduler.step()
             
-            # Zero gradients
-            self.optimizer.zero_grad()
+            # Zero gradients with set_to_none for memory efficiency
+            self.optimizer.zero_grad(set_to_none=True)
             
             # Update global step
             self.global_step += 1
+            
+            # Aggressive memory cleanup after optimizer step
+            if self.device == 'cuda' or (hasattr(self.device, 'type') and self.device.type == 'cuda'):
+                torch.cuda.empty_cache()
+                torch.cuda.synchronize()  # Wait for GPU operations to complete
+            
+            # Force Python garbage collection after optimizer step
+            import gc
+            gc.collect()
         
-        return loss.item()
+        # Free batch tensors
+        del input_ids, labels, logits, loss
+        
+        # Force garbage collection every 8 steps to prevent memory creep
+        if accumulation_step % 8 == 0:
+            import gc
+            gc.collect()
+        
+        return loss_value
     
     def train_epoch(
         self,

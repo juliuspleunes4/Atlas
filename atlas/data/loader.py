@@ -55,6 +55,9 @@ def create_dataloader(
         f"num_workers={num_workers}, pin_memory={pin_memory}, drop_last={drop_last}"
     )
     
+    # For extreme memory optimization (batch_size=1), limit prefetch to prevent memory buildup
+    prefetch_factor = 2 if num_workers > 0 and batch_size == 1 else None
+    
     return DataLoader(
         dataset,
         batch_size=batch_size,
@@ -63,6 +66,8 @@ def create_dataloader(
         pin_memory=pin_memory,
         drop_last=drop_last,
         collate_fn=collate_batch,
+        prefetch_factor=prefetch_factor,
+        persistent_workers=False,  # Don't keep workers alive between epochs
     )
 
 

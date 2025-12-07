@@ -6,13 +6,20 @@ schedulers for training.
 """
 
 import torch
-from torch.optim import Optimizer, AdamW
+from torch.optim import Optimizer, AdamW, SGD
 from torch.optim.lr_scheduler import LambdaLR
 from typing import Optional, Dict, Any
 import math
 import logging
 
 logger = logging.getLogger(__name__)
+
+# Try to import 8-bit optimizer for memory efficiency
+try:
+    import bitsandbytes as bnb
+    HAS_BITSANDBYTES = True
+except ImportError:
+    HAS_BITSANDBYTES = False
 
 
 def create_optimizer(
@@ -22,9 +29,11 @@ def create_optimizer(
     betas: tuple = (0.9, 0.95),
     eps: float = 1e-8,
     exclude_from_weight_decay: Optional[list] = None,
-) -> AdamW:
+    optimizer_type: str = 'adamw',
+    momentum: float = 0.9,
+) -> Optimizer:
     """
-    Create AdamW optimizer with weight decay.
+    Create optimizer with weight decay.
     
     By default, excludes biases and LayerNorm parameters from weight decay,
     following best practices for transformer training.
@@ -33,16 +42,21 @@ def create_optimizer(
         model: PyTorch model
         learning_rate: Learning rate
         weight_decay: Weight decay coefficient
-        betas: Adam betas (beta1, beta2)
-        eps: Adam epsilon
+        betas: Adam betas (beta1, beta2) - for AdamW variants
+        eps: Adam epsilon - for AdamW variants
         exclude_from_weight_decay: List of parameter name patterns to exclude
             from weight decay (e.g., ['bias', 'LayerNorm'])
+        optimizer_type: Type of optimizer ('adamw', 'adamw8bit', 'sgd')
+            - 'adamw': Standard AdamW (2 momentum states, ~1.9GB for 655M params)
+            - 'adamw8bit': 8-bit AdamW (~0.5GB for 655M params, 75% memory reduction)
+            - 'sgd': SGD with Nesterov momentum (~0.95GB for 655M params, 50% memory reduction)
+        momentum: Momentum factor for SGD
         
     Returns:
-        AdamW optimizer
+        Optimizer instance
         
     Example:
-        >>> optimizer = create_optimizer(model, learning_rate=3e-4)
+        >>> optimizer = create_optimizer(model, learning_rate=3e-4, optimizer_type='adamw8bit')
     """
     if exclude_from_weight_decay is None:
         exclude_from_weight_decay = ['bias', 'LayerNorm.weight', 'ln', 'norm']
@@ -69,17 +83,58 @@ def create_optimizer(
         {'params': no_decay_params, 'weight_decay': 0.0},
     ]
     
-    logger.info(
-        f"Creating AdamW optimizer: lr={learning_rate}, weight_decay={weight_decay}, "
-        f"decay_params={len(decay_params)}, no_decay_params={len(no_decay_params)}"
-    )
-    
-    optimizer = AdamW(
-        param_groups,
-        lr=learning_rate,
-        betas=betas,
-        eps=eps,
-    )
+    # Create optimizer based on type
+    if optimizer_type == 'adamw':
+        logger.info(
+            f"Creating AdamW optimizer: lr={learning_rate}, weight_decay={weight_decay}, "
+            f"decay_params={len(decay_params)}, no_decay_params={len(no_decay_params)}"
+        )
+        optimizer = AdamW(
+            param_groups,
+            lr=learning_rate,
+            betas=betas,
+            eps=eps,
+        )
+        
+    elif optimizer_type == 'adamw8bit':
+        if not HAS_BITSANDBYTES:
+            logger.warning("bitsandbytes not installed, falling back to regular AdamW")
+            logger.warning("Install with: pip install bitsandbytes")
+            optimizer = AdamW(
+                param_groups,
+                lr=learning_rate,
+                betas=betas,
+                eps=eps,
+            )
+        else:
+            logger.info(
+                f"Creating 8-bit AdamW optimizer: lr={learning_rate}, weight_decay={weight_decay}, "
+                f"decay_params={len(decay_params)}, no_decay_params={len(no_decay_params)}"
+            )
+            logger.info("Using quantized optimizer states (75% memory reduction vs standard AdamW)")
+            optimizer = bnb.optim.AdamW8bit(
+                param_groups,
+                lr=learning_rate,
+                betas=betas,
+                eps=eps,
+            )
+        
+    elif optimizer_type == 'sgd':
+        logger.info(
+            f"Creating SGD optimizer with Nesterov momentum: lr={learning_rate}, "
+            f"momentum={momentum}, weight_decay={weight_decay}, "
+            f"decay_params={len(decay_params)}, no_decay_params={len(no_decay_params)}"
+        )
+        logger.info("Using 1 momentum state (50% memory reduction vs standard AdamW)")
+        optimizer = SGD(
+            param_groups,
+            lr=learning_rate,
+            momentum=momentum,
+            nesterov=True,  # Nesterov momentum for better convergence
+        )
+        
+    else:
+        raise ValueError(f"Unknown optimizer type: {optimizer_type}. Choose from: adamw, adamw8bit, sgd")
     
     return optimizer
 

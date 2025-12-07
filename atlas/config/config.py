@@ -33,6 +33,9 @@ class ModelConfig:
     # Activation function
     activation: str = "gelu"  # gelu, silu, relu
     
+    # Memory optimization
+    gradient_checkpointing: bool = False  # Trade compute for memory
+    
     def __post_init__(self):
         """Validate configuration after initialization."""
         if self.hidden_size % self.num_heads != 0:
@@ -63,6 +66,8 @@ class TrainingConfig:
     beta2: float = 0.95
     grad_clip: float = 1.0
     max_grad_norm: float = 1.0  # Alias for grad_clip (used in YAML)
+    optimizer_type: str = "adamw"  # adamw, adamw8bit, sgd
+    momentum: float = 0.9  # For SGD optimizer
     
     # Schedule
     warmup_steps: int = 1000
