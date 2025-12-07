@@ -32,10 +32,16 @@ All notable changes to Atlas will be documented in this file.
   - First epoch overhead calculation
   - Timeline predictions with completion dates
 - **No-resume flag**: Added `--no-resume` flag to prevent duplicate checkpoint prompts in automated scripts
-- **Mid-epoch checkpoint callback**: `Trainer.train_epoch()` now supports `step_callback` parameter for mid-epoch checkpointing
+- **Built-in checkpoint saving**: `Trainer` now handles checkpoint saving internally during training
+  - Accepts `checkpoint_manager` and `auto_save_interval` in constructor
+  - Saves checkpoints automatically at specified step intervals
+  - Tracks `current_epoch` for checkpoint metadata
+  - More reliable than callback-based approach (no Python import cache issues)
+- **Mid-epoch checkpoint callback**: `Trainer.train_epoch()` still supports optional `step_callback` parameter for extensibility
   - Callback function receives `(trainer, loss)` after each global step
-  - Enables checkpoint saving during long epochs (e.g., batch_size=1 with 166K sequences)
+  - Used for custom logic beyond checkpointing
   - 5 comprehensive tests for callback functionality
+- **Cache clearing utilities**: New `clear_all_cache.ps1` script for manual cache clearing
 - **17 new comprehensive tests** (total: 324 passing tests)
   - 9 tests for memory-mapped dataset
   - 3 tests for config loading validation
@@ -48,16 +54,25 @@ All notable changes to Atlas will be documented in this file.
 - Training script now uses attribute access (`config.training.learning_rate`) instead of dict access (`config['training']['learning_rate']`)
 - `TextDataset.__getitem__` now supports negative indexing (e.g., `dataset[-1]`)
 - Dataset loading includes automatic garbage collection and CUDA cache clearing to free memory
-- **Checkpoint saving logic**: Checkpoints now save during epochs via `step_callback`, not just after epoch completion
-  - Training script uses callback to save checkpoints at regular step intervals
-  - Prevents waiting for entire epoch completion (critical for batch_size=1 with large datasets)
+- **Checkpoint saving architecture**: Moved from callback-based to built-in trainer mechanism
+  - `Trainer.__init__()` now accepts `checkpoint_manager` and `auto_save_interval` parameters
+  - Checkpoint saving happens directly in `train_epoch()` method after global step updates
+  - Eliminates Python import cache issues that prevented callbacks from executing
+  - More reliable and maintainable implementation
+- **Pipeline scripts enhanced**: Both `.ps1` and `.sh` scripts now clear Python cache and use `-B` flag before training
+- **Default checkpoint interval**: Reduced from 1000 to 100 steps for more frequent saves (~4-5 minutes with ULTRA config)
 
 ### Fixed
 - **System freeze issue**: 8-bit optimizer (adamw8bit) reduces optimizer memory by 75%, preventing system freeze during optimizer.step()
-- **Missing checkpoints during training**: Checkpoints now save mid-epoch instead of only at epoch boundaries
+- **Missing checkpoints during training**: Moved checkpoint saving logic from callback to built-in trainer functionality
   - Previously, with batch_size=1 and 166K sequences, no checkpoints would save until epoch completed (~166K steps)
-  - Now saves checkpoints every `save_interval` steps (default 1000, auto-adjusts to ~10 min intervals)
+  - Root cause: Python bytecode caching prevented updated callback code from loading
+  - Solution: Built checkpoint saving directly into `Trainer.train_epoch()` method
+  - Checkpoints now reliably save every N steps (default 100, configurable)
+  - Added Python cache clearing to pipeline scripts (`-B` flag prevents bytecode caching)
+  - Added `-W ignore::SyntaxWarning` to suppress PyTorch internal warnings
 - **System freeze issue**: Memory-mapped storage prevents RAM exhaustion when training with large datasets
+- **Python module caching**: Pipeline scripts now clear `__pycache__` and use `-B` flag to ensure latest code is always loaded
 - Config validation now happens at load time, catching errors before training starts
 - Duplicate `num_workers` field in `DataConfig` removed
 - Sequence length synchronization between `max_seq_len` and `sequence_length`
