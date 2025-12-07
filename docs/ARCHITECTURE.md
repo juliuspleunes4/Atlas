@@ -483,13 +483,18 @@ Sequence 3: [7586, 21831, 18045, 625]  (tokens 2-5)  <- overlap
 
 ### 6. Checkpoint Strategy
 
-**Choice**: Multiple checkpoint types (step, epoch, best)
+**Choice**: Multiple checkpoint types (step, epoch, best, interrupt)
 
 **Rationale**:
-- Step checkpoints: Resume training easily
-- Epoch checkpoints: Evaluation milestones
-- Best checkpoint: Best model for inference
-- Automatic cleanup prevents disk overflow
+- **Step checkpoints** (every 100 global steps): Resume training easily
+  - Keeps last 5 to prevent disk overflow
+  - Automatic cleanup of older checkpoints
+- **Epoch checkpoints**: Evaluation milestones
+  - Keeps last 5 epoch checkpoints
+- **Best checkpoint**: Best model for inference
+  - Based on validation loss when available
+  - Based on training loss otherwise
+- **Interrupt checkpoint**: Saved on Ctrl+C for clean recovery
 
 ## Performance Considerations
 

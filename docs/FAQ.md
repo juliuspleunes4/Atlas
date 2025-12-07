@@ -242,21 +242,23 @@ Key considerations:
 
 ### When are checkpoints saved?
 
-Atlas saves three types of checkpoints:
+Atlas saves four types of checkpoints:
 
-1. **Step-based**: Every `save_interval` steps (keeps last 2)
+1. **Step-based**: Every 100 global steps (keeps last 5, ~18.4GB total)
 2. **Epoch-based**: At end of each epoch (keeps last 5)
-3. **Best model**: When validation loss improves (always kept)
-
-The `save_interval` automatically adjusts after the first epoch to save approximately every 10 minutes.
+3. **Best model**: When performance improves (always kept)
+   - Uses validation loss when validation data available
+   - Uses training loss otherwise
+4. **Interrupt**: When pressing Ctrl+C during training (manual backup)
 
 ### Which checkpoint should I use?
 
 - **Latest checkpoint** (`atlas_step_X.pt`): Most recent training state
-- **Best checkpoint** (`best_model.pt`): Lowest validation loss
-- **Epoch checkpoint** (`atlas_epoch_X.pt`): End of specific epoch
+- **Best checkpoint** (`atlas_best.pt`): Best performance (inference-ready)
+- **Epoch checkpoint** (`atlas_epoch_X_step_Y.pt`): End of specific epoch
+- **Interrupt checkpoint** (`atlas_interrupt_step_X.pt`): Emergency save from Ctrl+C
 
-For inference, use **best_model.pt**. For resuming training, Atlas auto-detects the latest.
+For inference, use **atlas_best.pt**. For resuming training, Atlas auto-detects the latest.
 
 ### How do I load a checkpoint?
 
