@@ -12,6 +12,14 @@ for a given configuration and dataset. It accounts for:
 - Dataset size and batch parameters
 """
 
+""" 
+!IMPORTANT: 
+> This file contains some bugs and won't run yet. I am still working on fixing them.
+> Please check back later! 
+
+— bugs fear me (soon), Julius
+"""
+
 import argparse
 import time
 import sys
@@ -73,11 +81,14 @@ def calculate_dataset_stats(
     total_sequences = len(dataset)
     stats = dataset.get_stats()
     
+    # Calculate average sequence length
+    avg_seq_len = stats['total_tokens'] / total_sequences if total_sequences > 0 else 0
+    
     return {
         'total_sequences': total_sequences,
         'total_tokens': stats['total_tokens'],
         'num_files': stats['num_files'],
-        'avg_seq_len': stats['avg_seq_len']
+        'avg_seq_len': avg_seq_len
     }
 
 
@@ -618,7 +629,7 @@ def main():
         dataset=dataset,
         batch_size=config.training.batch_size,
         shuffle=True,
-        num_workers=config.training.num_workers,
+        num_workers=config.data.num_workers,
         pin_memory=device.type == 'cuda'
     )
     
@@ -638,7 +649,7 @@ def main():
                 dataset=val_dataset,
                 batch_size=config.training.batch_size,
                 shuffle=False,
-                num_workers=0,
+                num_workers=config.data.num_workers,
                 pin_memory=device.type == 'cuda'
             )
     
@@ -650,12 +661,18 @@ def main():
     logging.info(f"Model parameters: {num_params:,}")
     
     # Create optimizer and scheduler
-    optimizer = create_optimizer(model, config.training)
+    optimizer = create_optimizer(
+        model=model,
+        learning_rate=config.training.learning_rate,
+        weight_decay=config.training.weight_decay,
+        betas=(config.training.beta1, config.training.beta2)
+    )
     scheduler = create_scheduler(
         optimizer=optimizer,
         num_training_steps=1000000,  # Dummy value for benchmark
-        warmup_steps=config.training.warmup_steps,
-        schedule_type=config.training.lr_schedule
+        num_warmup_steps=config.training.warmup_steps,
+        scheduler_type=config.training.scheduler_type,
+        min_lr_ratio=config.training.min_lr_ratio
     )
     
     # Create trainer
