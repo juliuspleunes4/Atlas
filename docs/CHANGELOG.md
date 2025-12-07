@@ -4,7 +4,7 @@ All notable changes to Atlas will be documented in this file.
 
 ---
 
-## [Unreleased] - 2025-12-07 - Memory-Efficient Optimizer & System Freeze Fix
+## [v1.1.0] - 2025-12-07 - Memory-Efficient Optimizer & Reliable Checkpointing
 
 ### Added
 - **8-bit optimizer support**: Added `adamw8bit` optimizer type using bitsandbytes for 75% memory reduction
