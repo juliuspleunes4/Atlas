@@ -279,6 +279,12 @@ fi
 
 # Step 9: Start training
 step "Starting Training..."
+
+# Clear Python cache to ensure latest code is loaded
+info "Clearing Python cache..."
+find . -type d -name "__pycache__" -exec rm -rf {} + 2>/dev/null || true
+find . -type f -name "*.pyc" -delete 2>/dev/null || true
+
 echo -e "${GREEN}
 ================================================================================
 TRAINING STARTED
@@ -286,9 +292,9 @@ TRAINING STARTED
 ${NC}"
 
 if [ -n "$RESUME_FLAG" ]; then
-    eval python scripts/train.py --config \"$CONFIG_FILE\" --train-data \"$PROCESSED_DIR\" $RESUME_FLAG
+    eval python -B -W ignore::SyntaxWarning scripts/train.py --config \"$CONFIG_FILE\" --train-data \"$PROCESSED_DIR\" $RESUME_FLAG
 else
-    python scripts/train.py --config "$CONFIG_FILE" --train-data "$PROCESSED_DIR"
+    python -B -W ignore::SyntaxWarning scripts/train.py --config "$CONFIG_FILE" --train-data "$PROCESSED_DIR"
 fi
 
 # Check result
