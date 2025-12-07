@@ -606,6 +606,20 @@ def main():
     # Define step callback for mid-epoch checkpointing
     def checkpoint_callback(trainer_obj, loss):
         """Called after each global step to save checkpoints."""
+        nonlocal best_train_loss  # Allow modifying outer scope variable
+        
+        # Check if this is a new best loss
+        is_best_step = loss < best_train_loss
+        if is_best_step:
+            old_best = best_train_loss
+            best_train_loss = loss
+            improvement = ((old_best - loss) / old_best * 100) if old_best != float('inf') else 0
+            logger.info(f"\n{'-'*80}")
+            logger.info(f"  [BEST] NEW BEST TRAINING LOSS: {loss:.4f}")
+            if improvement > 0:
+                logger.info(f"  [BEST] Improved by {improvement:.2f}%")
+            logger.info(f"{'-'*80}")
+        
         # Save step-based checkpoint at intervals
         if trainer_obj.global_step % auto_save_interval == 0 and trainer_obj.global_step > 0:
             logger.info(f"\n{'-'*80}")
@@ -616,6 +630,7 @@ def main():
                 loss=loss,
                 perplexity=compute_perplexity(torch.tensor(loss)).item(),
                 learning_rate=optimizer.param_groups[0]['lr'],
+                best_metric=best_train_loss,
             )
             
             checkpoint_path = checkpoint_manager.save_checkpoint(
@@ -623,13 +638,15 @@ def main():
                 optimizer,
                 metadata,
                 scheduler=scheduler,
-                is_best=False,
+                is_best=is_best_step,
                 is_epoch_end=False,
             )
             logger.info(f"  [SAVED] Step checkpoint: {checkpoint_path}")
             logger.info(f"  [SAVED]   Step: {metadata.step}, Epoch: {metadata.epoch}")
             logger.info(f"  [SAVED]   Loss: {metadata.loss:.4f}, Perplexity: {metadata.perplexity:.2f}")
             logger.info(f"  [SAVED]   Learning Rate: {metadata.learning_rate:.2e}")
+            if is_best_step:
+                logger.info(f"  [BEST] Best model saved (always kept)")
             logger.info(f"{'-'*80}")
     
     try:

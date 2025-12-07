@@ -4,6 +4,20 @@ All notable changes to Atlas will be documented in this file.
 
 ---
 
+## [v1.2.3] - 2025-12-07 - Best Checkpoint Tracking for Step-Based Saves
+
+### Fixed
+- **Best checkpoint creation at step intervals**: Fixed best model checkpoint not being created during mid-epoch step saves
+  - Root cause: Best loss tracking (`is_best` flag) only calculated at epoch boundaries, not at step-based checkpoints
+  - Now tracks and updates `best_train_loss` in the step checkpoint callback using `nonlocal`
+  - Best loss check happens on **every training step**, not just at epoch end
+  - `atlas_best.pt` now created immediately when loss improves, even mid-epoch
+  - Logs "[BEST] NEW BEST TRAINING LOSS" with improvement percentage when new best is found
+  - Step checkpoint metadata now includes `best_metric` field with current best loss
+  - Ensures best model is always preserved regardless of checkpoint cleanup (keep_checkpoints setting)
+
+---
+
 ## [v1.2.2] - 2025-12-07 - Inference Script Fixes
 
 ### Fixed
