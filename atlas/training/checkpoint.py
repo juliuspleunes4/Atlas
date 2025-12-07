@@ -10,12 +10,15 @@ Provides functionality for:
 
 import os
 import json
+import logging
 from pathlib import Path
 from typing import Dict, Any, Optional
 from dataclasses import dataclass, asdict
 
 import torch
 import torch.nn as nn
+
+logger = logging.getLogger(__name__)
 
 
 @dataclass
@@ -261,6 +264,7 @@ class CheckpointManager:
             # Skip if this is the best checkpoint
             if checkpoint.name == f'{self.model_name}_best.pt':
                 continue
+            logger.info(f"  [CLEANUP] Removing old checkpoint: {checkpoint.name}")
             checkpoint.unlink()
             # Also remove associated JSON metadata
             json_path = checkpoint.with_suffix('.json')
@@ -280,6 +284,7 @@ class CheckpointManager:
         
         # Remove old checkpoints
         for checkpoint in checkpoints[self.keep_last_epochs:]:
+            logger.info(f"  [CLEANUP] Removing old epoch checkpoint: {checkpoint.name}")
             checkpoint.unlink()
             # Also remove associated JSON metadata
             json_path = checkpoint.with_suffix('.json')
