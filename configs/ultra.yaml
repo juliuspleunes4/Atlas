@@ -33,7 +33,7 @@ training:
   batch_size: 1              # Single sample per step (minimum possible)
   gradient_accumulation_steps: 16  # Further reduced to prevent system freeze (was 32, originally 64)
   
-  max_steps: 80000           # More steps for larger model
+  max_steps: 499434          # 3 epochs (3 × 166,478 samples = ~128M tokens
   warmup_steps: 3000
   scheduler_type: "cosine"
   
