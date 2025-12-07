@@ -12,7 +12,7 @@ with open("requirements.txt", "r", encoding="utf-8") as f:
 
 setup(
     name="atlas-llm",
-    version="1.1.0",
+    version="1.2.0",
     author="Atlas Team",
     description="A from-scratch language model implementation with GGUF export",
     long_description=long_description,
