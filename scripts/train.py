@@ -593,13 +593,17 @@ def main():
     max_steps = config.training.max_steps
     epoch = start_epoch - 1  # Will be incremented at loop start
     best_val_loss = float('inf')
-    best_train_loss = float('inf')  # Track best training loss
     
-    # Restore best loss from checkpoint if resuming
+    # Initialize best_train_loss from checkpoint manager (which loaded from existing best checkpoint)
+    best_train_loss = checkpoint_manager.best_metric
+    if best_train_loss != float('inf'):
+        logger.info(f"  Initialized best training loss from existing best checkpoint: {best_train_loss:.4f}")
+    
+    # Also restore from resumed checkpoint metadata if available (might be more recent)
     if args.resume and 'metadata' in locals():
-        if metadata.best_metric is not None:
+        if metadata.best_metric is not None and metadata.best_metric < best_train_loss:
             best_train_loss = metadata.best_metric
-            logger.info(f"  Restored best training loss from checkpoint: {best_train_loss:.4f}")
+            logger.info(f"  Updated best training loss from resumed checkpoint: {best_train_loss:.4f}")
     
     training_start_time = time.time()
     

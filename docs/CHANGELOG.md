@@ -4,6 +4,30 @@ All notable changes to Atlas will be documented in this file.
 
 ---
 
+## [v1.2.4] - 2025-12-07 - Persistent Best Checkpoint Tracking Across Sessions
+
+### Fixed
+- **Persistent best checkpoint tracking**: Fixed best checkpoint being overwritten by worse models across training sessions
+  - Root cause: `CheckpointManager` initialized `best_metric = float('inf')` on every startup, never checking for existing `atlas_best.pt`
+  - This caused a critical regression scenario: Session 1 saves loss 3.88 as best → Session 2 resumes from checkpoint with loss 5.0 → Session 2 thinks loss 4.5 is "best" → overwrites 3.88 with 4.5
+  - **CheckpointManager now loads existing best checkpoint on initialization**:
+    - Checks for `{model_name}_best.pt` file existence in checkpoint directory
+    - Loads existing best checkpoint with `torch.load(..., weights_only=False)`
+    - Extracts `metadata['loss']` to initialize `self.best_metric` instead of `float('inf')`
+    - Logs "Found existing best checkpoint with loss: X.XXXX" when found
+  - **train.py now initializes from persistent best metric**:
+    - Primary source: `best_train_loss = checkpoint_manager.best_metric` (loaded from existing best)
+    - Fallback: If resumed checkpoint has better loss, use that instead
+    - Logs initialization source for transparency
+  - **save_checkpoint now verifies improvement before overwriting**:
+    - Added comparison: `if is_best and self.keep_best and metadata.loss < self.best_metric:`
+    - Only saves `atlas_best.pt` if new loss is **strictly better** than existing best
+    - Updates `self.best_metric` only after successful save
+    - Logs "[BEST] Saved new best checkpoint (loss: X.XXXX)" when overwriting
+  - Best model now properly persists across **all training sessions**, preventing loss of superior checkpoints
+
+---
+
 ## [v1.2.3] - 2025-12-07 - Best Checkpoint Tracking for Step-Based Saves
 
 ### Fixed

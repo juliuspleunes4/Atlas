@@ -80,9 +80,23 @@ class CheckpointManager:
         # Create checkpoint directory
         self.checkpoint_dir.mkdir(parents=True, exist_ok=True)
         
-        # Track best metric
+        # Track best metric - load from existing best checkpoint if available
         self.best_metric = float('inf')  # Lower is better (loss)
         self.best_checkpoint_path = None
+        
+        # Check for existing best checkpoint and restore best metric
+        if self.keep_best:
+            best_checkpoint = self.checkpoint_dir / f'{self.model_name}_best.pt'
+            if best_checkpoint.exists():
+                try:
+                    existing_best = torch.load(best_checkpoint, map_location='cpu', weights_only=False)
+                    if 'metadata' in existing_best and 'loss' in existing_best['metadata']:
+                        self.best_metric = existing_best['metadata']['loss']
+                        self.best_checkpoint_path = str(best_checkpoint)
+                        logger.info(f"Found existing best checkpoint with loss: {self.best_metric:.4f}")
+                except Exception as e:
+                    logger.warning(f"Could not load existing best checkpoint: {e}")
+                    # Keep default float('inf') if loading fails
     
     def save_checkpoint(
         self,
@@ -133,7 +147,8 @@ class CheckpointManager:
             json.dump(metadata.to_dict(), f, indent=2)
         
         # Save as best if applicable (always keep separate from others)
-        if is_best and self.keep_best:
+        # Only save if this is truly better than any existing best checkpoint
+        if is_best and self.keep_best and metadata.loss < self.best_metric:
             best_path = self.checkpoint_dir / f'{self.model_name}_best.pt'
             torch.save(checkpoint, best_path)
             best_metadata_path = best_path.with_suffix('.json')
@@ -141,6 +156,7 @@ class CheckpointManager:
                 json.dump(metadata.to_dict(), f, indent=2)
             self.best_checkpoint_path = str(best_path)
             self.best_metric = metadata.loss
+            logger.info(f"  [BEST] Saved new best checkpoint (loss: {metadata.loss:.4f})")
         
         # Clean up old checkpoints
         if is_epoch_end and self.keep_last_epochs is not None:
