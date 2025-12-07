@@ -4,6 +4,19 @@ All notable changes to Atlas will be documented in this file.
 
 ---
 
+## [v1.2.2] - 2025-12-07 - Inference Script Fixes
+
+### Fixed
+- **Inference script compatibility**: Fixed multiple issues preventing inference from working
+  - Fixed `Tokenizer` initialization: use `encoding_name` parameter instead of `tokenizer_name`
+  - Fixed checkpoint config inference: use correct state dict keys (`embeddings.token_embedding.embedding.weight` and `embeddings.positional_embedding.embedding.weight`)
+  - Fixed `TextGenerator` initialization: removed invalid `tokenizer` parameter
+  - Added `tokenizer` parameter to `generate_interactive()` and `generate_batch()` functions
+  - Pass `tokenizer` to `generate_from_prompt()` calls in both interactive and batch modes
+  - Inference now works correctly with `scripts/infer.py` for both interactive and batch generation
+
+---
+
 ## [v1.2.1] - 2025-12-07 - Best Model Checkpoint Resume Fix
 
 ### Added
