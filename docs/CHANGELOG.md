@@ -32,9 +32,14 @@ All notable changes to Atlas will be documented in this file.
   - First epoch overhead calculation
   - Timeline predictions with completion dates
 - **No-resume flag**: Added `--no-resume` flag to prevent duplicate checkpoint prompts in automated scripts
-- **12 new comprehensive tests** (total: 319 passing tests)
+- **Mid-epoch checkpoint callback**: `Trainer.train_epoch()` now supports `step_callback` parameter for mid-epoch checkpointing
+  - Callback function receives `(trainer, loss)` after each global step
+  - Enables checkpoint saving during long epochs (e.g., batch_size=1 with 166K sequences)
+  - 5 comprehensive tests for callback functionality
+- **17 new comprehensive tests** (total: 324 passing tests)
   - 9 tests for memory-mapped dataset
   - 3 tests for config loading validation
+  - 5 tests for step_callback functionality (mid-epoch checkpointing)
 
 ### Changed
 - `TrainingConfig` now supports all YAML field names with proper aliases (`max_grad_norm`, `scheduler_type`, `gradient_checkpointing`, `keep_checkpoints`)
@@ -43,8 +48,15 @@ All notable changes to Atlas will be documented in this file.
 - Training script now uses attribute access (`config.training.learning_rate`) instead of dict access (`config['training']['learning_rate']`)
 - `TextDataset.__getitem__` now supports negative indexing (e.g., `dataset[-1]`)
 - Dataset loading includes automatic garbage collection and CUDA cache clearing to free memory
+- **Checkpoint saving logic**: Checkpoints now save during epochs via `step_callback`, not just after epoch completion
+  - Training script uses callback to save checkpoints at regular step intervals
+  - Prevents waiting for entire epoch completion (critical for batch_size=1 with large datasets)
 
 ### Fixed
+- **System freeze issue**: 8-bit optimizer (adamw8bit) reduces optimizer memory by 75%, preventing system freeze during optimizer.step()
+- **Missing checkpoints during training**: Checkpoints now save mid-epoch instead of only at epoch boundaries
+  - Previously, with batch_size=1 and 166K sequences, no checkpoints would save until epoch completed (~166K steps)
+  - Now saves checkpoints every `save_interval` steps (default 1000, auto-adjusts to ~10 min intervals)
 - **System freeze issue**: Memory-mapped storage prevents RAM exhaustion when training with large datasets
 - Config validation now happens at load time, catching errors before training starts
 - Duplicate `num_workers` field in `DataConfig` removed
@@ -114,7 +126,7 @@ All notable changes to Atlas will be documented in this file.
 
 ### 📊 Statistics
 
-- **319 passing tests** across all components
+- **324 passing tests** across all components
 - **6 model configurations** (40M to 500M parameters)
 - **10 comprehensive documentation files**
 - **Clean, modular codebase** with 94%+ coverage on core modules
@@ -177,7 +189,7 @@ This release represents the culmination of comprehensive development work across
   - `run_pipeline.sh` (Bash): Checkpoint detection with JSON metadata parsing
   - User-friendly y/n prompts with input validation
 
-- **New tests for auto-resume** (6 new tests, total: 319 passing)
+- **New tests for auto-resume** (6 new tests, total: 324 passing)
   - `test_find_latest_checkpoint_empty_dir`: Handles empty checkpoint directory
   - `test_find_latest_checkpoint`: Finds most recent by timestamp
   - `test_find_latest_checkpoint_excludes_best`: Correctly excludes best.pt

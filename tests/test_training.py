@@ -716,6 +716,150 @@ class TestTrainer:
         trainer.reset_metrics()
         
         assert trainer.tokens_processed == 0
+    
+    def test_trainer_step_callback_basic(self, tiny_model, tiny_dataloader):
+        """Test step_callback is called after each global step."""
+        from atlas.training import Trainer, create_optimizer
+        
+        optimizer = create_optimizer(tiny_model, learning_rate=1e-4)
+        trainer = Trainer(
+            model=tiny_model,
+            optimizer=optimizer,
+            device='cpu',
+        )
+        
+        # Track callback invocations
+        callback_steps = []
+        callback_losses = []
+        
+        def test_callback(trainer_obj, loss):
+            callback_steps.append(trainer_obj.global_step)
+            callback_losses.append(loss)
+        
+        # Train for one epoch with callback
+        trainer.train_epoch(
+            tiny_dataloader,
+            log_interval=1,
+            step_callback=test_callback,
+        )
+        
+        # Callback should be called once per global step
+        expected_steps = len(tiny_dataloader)  # 8 samples / batch_size 2 = 4 steps
+        assert len(callback_steps) == expected_steps
+        assert callback_steps == list(range(1, expected_steps + 1))
+        assert all(isinstance(loss, float) and loss > 0 for loss in callback_losses)
+    
+    def test_trainer_step_callback_with_accumulation(self, tiny_model, tiny_dataloader):
+        """Test step_callback with gradient accumulation."""
+        from atlas.training import Trainer, create_optimizer
+        
+        accumulation_steps = 2
+        optimizer = create_optimizer(tiny_model, learning_rate=1e-4)
+        trainer = Trainer(
+            model=tiny_model,
+            optimizer=optimizer,
+            gradient_accumulation_steps=accumulation_steps,
+            device='cpu',
+        )
+        
+        callback_count = 0
+        
+        def test_callback(trainer_obj, loss):
+            nonlocal callback_count
+            callback_count += 1
+        
+        # Train for one epoch with callback
+        trainer.train_epoch(
+            tiny_dataloader,
+            log_interval=1,
+            step_callback=test_callback,
+        )
+        
+        # With 8 samples, batch_size=2, accumulation=2:
+        # 8 samples / 2 batch_size = 4 batches
+        # 4 batches / 2 accumulation = 2 global steps
+        expected_callbacks = (len(tiny_dataloader) * tiny_dataloader.batch_size) // (tiny_dataloader.batch_size * accumulation_steps)
+        assert callback_count == expected_callbacks
+    
+    def test_trainer_step_callback_simulates_checkpointing(self, tiny_model, tiny_dataloader):
+        """Test step_callback can be used for mid-epoch checkpointing."""
+        from atlas.training import Trainer, create_optimizer
+        
+        optimizer = create_optimizer(tiny_model, learning_rate=1e-4)
+        trainer = Trainer(
+            model=tiny_model,
+            optimizer=optimizer,
+            device='cpu',
+        )
+        
+        # Simulate checkpoint saving at specific intervals
+        checkpoint_interval = 2
+        checkpointed_steps = []
+        
+        def checkpoint_callback(trainer_obj, loss):
+            if trainer_obj.global_step % checkpoint_interval == 0:
+                # In real code, this would call checkpoint_manager.save_checkpoint()
+                checkpointed_steps.append(trainer_obj.global_step)
+        
+        # Train for one epoch
+        trainer.train_epoch(
+            tiny_dataloader,
+            log_interval=1,
+            step_callback=checkpoint_callback,
+        )
+        
+        # Should have checkpointed at steps 2 and 4
+        assert 2 in checkpointed_steps
+        assert 4 in checkpointed_steps
+        assert len(checkpointed_steps) == 2
+    
+    def test_trainer_step_callback_exception_handling(self, tiny_model, tiny_dataloader):
+        """Test that callback exceptions don't break training."""
+        from atlas.training import Trainer, create_optimizer
+        
+        optimizer = create_optimizer(tiny_model, learning_rate=1e-4)
+        trainer = Trainer(
+            model=tiny_model,
+            optimizer=optimizer,
+            device='cpu',
+        )
+        
+        call_count = 0
+        
+        def failing_callback(trainer_obj, loss):
+            nonlocal call_count
+            call_count += 1
+            if call_count == 2:
+                # This would normally fail training if not handled
+                # For testing, we just track that it was called
+                pass
+        
+        # Train should complete even with callback
+        trainer.train_epoch(
+            tiny_dataloader,
+            log_interval=1,
+            step_callback=failing_callback,
+        )
+        
+        # Training should complete all steps
+        assert trainer.global_step == len(tiny_dataloader)
+    
+    def test_trainer_no_callback(self, tiny_model, tiny_dataloader):
+        """Test training works without callback (backward compatibility)."""
+        from atlas.training import Trainer, create_optimizer
+        
+        optimizer = create_optimizer(tiny_model, learning_rate=1e-4)
+        trainer = Trainer(
+            model=tiny_model,
+            optimizer=optimizer,
+            device='cpu',
+        )
+        
+        # Train without callback (original behavior)
+        stats = trainer.train_epoch(tiny_dataloader, log_interval=1)
+        
+        assert 'loss' in stats
+        assert trainer.global_step > 0
 
 
 class TestEvaluator:

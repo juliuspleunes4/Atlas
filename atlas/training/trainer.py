@@ -175,6 +175,7 @@ class Trainer:
         dataloader: DataLoader,
         max_steps: Optional[int] = None,
         log_interval: int = 10,
+        step_callback: Optional[callable] = None,
     ) -> Dict[str, float]:
         """
         Train for one epoch.
@@ -183,6 +184,8 @@ class Trainer:
             dataloader: DataLoader for training data
             max_steps: Maximum number of steps (None for full epoch)
             log_interval: Log metrics every N global steps
+            step_callback: Optional callback function called after each global step
+                          Receives (trainer, loss) as arguments
         
         Returns:
             Dictionary with epoch statistics
@@ -219,6 +222,10 @@ class Trainer:
             
             # Update accumulation step
             accumulation_step = (accumulation_step + 1) % self.gradient_accumulation_steps
+            
+            # Call step callback if provided (for checkpointing, etc.)
+            if step_callback is not None and accumulation_step == 0:
+                step_callback(self, loss)
             
             # Log metrics
             if self.global_step > 0 and self.global_step % log_interval == 0:

@@ -32,6 +32,7 @@ from atlas.training import (
     create_scheduler,
     CheckpointManager,
     CheckpointMetadata,
+    compute_perplexity,
 )
 
 
@@ -587,6 +588,32 @@ def main():
     best_val_loss = float('inf')
     training_start_time = time.time()
     
+    # Define step callback for mid-epoch checkpointing
+    def checkpoint_callback(trainer_obj, loss):
+        """Called after each global step to save checkpoints."""
+        # Save step-based checkpoint at intervals
+        if trainer_obj.global_step % auto_save_interval == 0:
+            logger.info(f"\n{'-'*80}")
+            logger.info(f"Saving checkpoint at step {trainer_obj.global_step}...")
+            metadata = CheckpointMetadata(
+                step=trainer_obj.global_step,
+                epoch=epoch,
+                loss=loss,
+                perplexity=compute_perplexity(torch.tensor(loss)).item(),
+                learning_rate=optimizer.param_groups[0]['lr'],
+            )
+            
+            checkpoint_path = checkpoint_manager.save_checkpoint(
+                model,
+                optimizer,
+                metadata,
+                scheduler=scheduler,
+                is_best=False,
+                is_epoch_end=False,
+            )
+            logger.info(f"  [SAVED] Step checkpoint: {checkpoint_path}")
+            logger.info(f"{'-'*80}")
+    
     try:
         while trainer.global_step < max_steps and not interrupted:
             epoch += 1
@@ -595,11 +622,12 @@ def main():
             logger.info(f">>> EPOCH {epoch} | Step {trainer.global_step}/{max_steps}")
             logger.info(f"{'='*80}")
             
-            # Train for one epoch
+            # Train for one epoch with checkpoint callback
             train_stats = trainer.train_epoch(
                 train_loader,
                 max_steps=max_steps,
                 log_interval=args.log_interval,
+                step_callback=checkpoint_callback,
             )
             
             epoch_time = time.time() - epoch_start_time
