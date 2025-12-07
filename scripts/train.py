@@ -637,12 +637,16 @@ def main():
                 best_metric=best_train_loss,
             )
             
+            # Check if THIS checkpoint (not just previous steps) is best
+            # This ensures checkpoint with loss 3.79 will overwrite best with 3.88
+            is_checkpoint_best = loss < checkpoint_manager.best_metric
+            
             checkpoint_path = checkpoint_manager.save_checkpoint(
                 model,
                 optimizer,
                 metadata,
                 scheduler=scheduler,
-                is_best=is_best_step,
+                is_best=is_checkpoint_best,
                 is_epoch_end=False,
             )
             logger.info(f"  [SAVED] Step checkpoint: {checkpoint_path}")
