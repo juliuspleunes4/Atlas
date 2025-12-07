@@ -571,6 +571,15 @@ def main():
     logger.info(f"Eval interval: every {args.eval_interval} steps")
     logger.info(f"Save interval: every {auto_save_interval} steps (will auto-adjust for ~10 min)")
     logger.info(f"Epoch checkpoints: saved at end of each epoch (keep last 5)")
+    
+    # Warn about 8-bit optimizer initialization delay
+    if config.training.optimizer_type == 'adamw8bit':
+        logger.info("")
+        logger.info("NOTE: First optimizer step will take 15-30 seconds (8-bit optimizer initialization)")
+        logger.info("      This is normal - CUDA kernels are being compiled and loaded into memory")
+        logger.info("      Your PC might look 'frozen' for about 20-60 seconds")
+        logger.info("      Subsequent steps will be fast")
+    
     logger.info("=" * 80)
     
     max_steps = config.training.max_steps

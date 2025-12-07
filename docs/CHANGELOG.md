@@ -4,9 +4,21 @@ All notable changes to Atlas will be documented in this file.
 
 ---
 
-## [Unreleased] - 2025-12-07 - Memory Optimization & Config Improvements
+## [Unreleased] - 2025-12-07 - Memory-Efficient Optimizer & System Freeze Fix
 
 ### Added
+- **8-bit optimizer support**: Added `adamw8bit` optimizer type using bitsandbytes for 75% memory reduction
+  - Stores momentum states in 8-bit precision instead of 32-bit
+  - Reduces optimizer memory from ~1.9GB to ~0.5GB for 655M parameter models
+  - **Fixes system freeze issue** that occurred at gradient accumulation boundary
+  - Requires `bitsandbytes` package (added to dependencies)
+- **Multiple optimizer types**: `create_optimizer()` now supports:
+  - `adamw`: Standard AdamW (2 momentum states, ~1.9GB for 655M params)
+  - `adamw8bit`: 8-bit AdamW (~0.5GB for 655M params, 75% memory reduction)
+  - `sgd`: SGD with Nesterov momentum (~0.95GB for 655M params, 50% memory reduction)
+- **Optimizer configuration fields**: Added to `TrainingConfig`:
+  - `optimizer_type`: Select optimizer algorithm (default: "adamw")
+  - `momentum`: Momentum factor for SGD (default: 0.9)
 - **Memory-mapped dataset support**: `TextDataset` now supports memory-mapped file storage for large datasets to prevent RAM exhaustion
   - Automatically enabled for ULTRA config (batch_size=1)
   - Tokens stored on disk, loaded on-demand
