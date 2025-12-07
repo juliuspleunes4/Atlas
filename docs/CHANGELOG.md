@@ -6,6 +6,14 @@ All notable changes to Atlas will be documented in this file.
 
 ## [v1.2.0] - 2025-12-07 - Checkpoint Resume & Progress Tracking Fixes
 
+### Added
+- **Best model tracking without validation**: Now saves `atlas_best.pt` based on training loss when no validation data provided
+  - Tracks best training loss throughout training
+  - Saves checkpoint whenever training loss improves
+  - Logs improvement percentage
+  - Ensures best model is always available even without validation set
+- **New test for best model checkpoint**: Added comprehensive test for training-loss-based best model tracking (total: 325 passing tests)
+
 ### Fixed
 - **Checkpoint resume double-prompt**: Fixed pipeline script asking twice about resuming from checkpoint
   - Pipeline now passes `--no-resume` flag when user chooses not to resume
@@ -42,6 +50,10 @@ All notable changes to Atlas will be documented in this file.
   - Skips epoch checkpoint and validation when interrupted
   - Reduces disk I/O and saves time when exiting
   - Clean, fast exit on Ctrl+C
+- **Auto-save checkpoint retention**: Increased from 3 to 5 most recent step-based checkpoints
+  - Keeps 5 recent auto-save checkpoints (every 100 global steps)
+  - Automatically deletes older checkpoints to save disk space
+  - Saves ~7.4GB disk space per 1000 steps (at 3.68GB per checkpoint)
 
 ---
 

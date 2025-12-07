@@ -1409,3 +1409,50 @@ class TestCheckpointing:
         
         assert latest is not None
         assert 'epoch_1' in latest.name
+    
+    def test_best_checkpoint_without_validation(self, tiny_model, temp_checkpoint_dir):
+        """Test that best checkpoint saves based on training loss when is_best=True."""
+        from atlas.training import CheckpointManager, CheckpointMetadata
+        from pathlib import Path
+        
+        manager = CheckpointManager(temp_checkpoint_dir, keep_best=True)
+        optimizer = torch.optim.Adam(tiny_model.parameters())
+        
+        # Save first checkpoint as best (high loss)
+        metadata1 = CheckpointMetadata(step=100, epoch=1, loss=5.0, perplexity=148.4)
+        path1 = manager.save_checkpoint(tiny_model, optimizer, metadata1, is_best=True)
+        
+        # Verify best checkpoint was created
+        best_path = Path(temp_checkpoint_dir) / 'atlas_best.pt'
+        assert best_path.exists()
+        
+        # Load best checkpoint and verify it has the correct loss
+        checkpoint = torch.load(best_path)
+        assert checkpoint['metadata']['loss'] == 5.0
+        
+        # Save another checkpoint with worse loss (should not update best)
+        metadata2 = CheckpointMetadata(step=200, epoch=2, loss=6.0, perplexity=403.4)
+        path2 = manager.save_checkpoint(tiny_model, optimizer, metadata2, is_best=False)
+        
+        # Best checkpoint should still have loss=5.0
+        checkpoint = torch.load(best_path)
+        assert checkpoint['metadata']['loss'] == 5.0
+        assert checkpoint['metadata']['step'] == 100
+        
+        # Save checkpoint with better loss (should update best)
+        metadata3 = CheckpointMetadata(step=300, epoch=3, loss=3.5, perplexity=33.1)
+        path3 = manager.save_checkpoint(tiny_model, optimizer, metadata3, is_best=True)
+        
+        # Best checkpoint should now have loss=3.5
+        checkpoint = torch.load(best_path)
+        assert checkpoint['metadata']['loss'] == 3.5
+        assert checkpoint['metadata']['step'] == 300
+        
+        # Verify best metadata JSON also updated
+        best_json = best_path.with_suffix('.json')
+        assert best_json.exists()
+        import json
+        with open(best_json, 'r') as f:
+            metadata = json.load(f)
+        assert metadata['loss'] == 3.5
+        assert metadata['step'] == 300

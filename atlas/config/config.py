@@ -91,7 +91,7 @@ class TrainingConfig:
     eval_steps: int = 100
     
     # Checkpointing
-    keep_checkpoints: int = 3  # Number of step-based checkpoints to keep
+    keep_checkpoints: int = 5  # Number of step-based checkpoints to keep
     
     def __post_init__(self):
         """Validate configuration after initialization."""

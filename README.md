@@ -4,7 +4,7 @@
 [![Python 3.8+](https://img.shields.io/badge/python-3.8+-blue.svg)](https://www.python.org/downloads/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
-[![Tests](https://img.shields.io/badge/tests-324%20passing-brightgreen.svg)](tests/)
+[![Tests](https://img.shields.io/badge/tests-325%20passing-brightgreen.svg)](tests/)
 
 **A from-scratch language model implementation with GGUF export.**
 
@@ -18,7 +18,7 @@ Atlas is a complete pipeline for building, training, and deploying decoder-only 
 - **⚡ Reliable Checkpointing**: Built-in mid-epoch checkpoint saving every N steps
 - **📦 GGUF Export**: Convert trained models to GGUF format for use with llama.cpp
 - **🧩 Modular Design**: Well-organized codebase with clear separation of concerns
-- **✅ Comprehensive Testing**: 324 tests covering all major components
+- **✅ Comprehensive Testing**: 325 tests covering all major components
 
 ## 📊 Project Status
 
@@ -44,7 +44,7 @@ Atlas is currently in early development. See [`docs/ROADMAP.md`](docs/ROADMAP.md
 **Upcoming:**
 - Phase 9-10: Advanced features and optimization
 
-**Total: 324 passing tests** ✨
+**Total: 325 passing tests** ✨
 
 ## ⚙️ Model Configurations
 

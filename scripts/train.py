@@ -593,6 +593,7 @@ def main():
     max_steps = config.training.max_steps
     epoch = start_epoch - 1  # Will be incremented at loop start
     best_val_loss = float('inf')
+    best_train_loss = float('inf')  # Track best training loss
     training_start_time = time.time()
     
     # Define step callback for mid-epoch checkpointing
@@ -695,6 +696,12 @@ def main():
                 logger.info(f"  [SAVED] Epoch checkpoint: {epoch_checkpoint_path}")
                 logger.info(f"{'-'*80}")
             
+            # Check if current training loss is the best
+            train_loss = train_stats['loss']
+            is_best_train = train_loss < best_train_loss
+            if is_best_train:
+                best_train_loss = train_loss
+            
             # Evaluate on validation set
             if val_loader and not interrupted and trainer.global_step % args.eval_interval == 0:
                 logger.info(f"\n{'-'*80}")
@@ -706,7 +713,7 @@ def main():
                 logger.info(f"  Val perplexity: {val_stats['perplexity']:.2f}")
                 logger.info(f"  Val time: {val_time:.2f}s")
                 
-                # Save best model
+                # Save best model based on validation loss
                 if val_stats['loss'] < best_val_loss:
                     improvement = ((best_val_loss - val_stats['loss']) / best_val_loss) * 100
                     best_val_loss = val_stats['loss']
@@ -718,7 +725,15 @@ def main():
                 logger.info(f"{'-'*80}")
             else:
                 val_stats = None
-                is_best = False
+                # Use training loss as "best" metric when no validation
+                is_best = is_best_train
+                if is_best:
+                    logger.info(f"\n{'-'*80}")
+                    improvement = ((float('inf') if best_train_loss == train_loss else best_train_loss - train_loss) / best_train_loss if best_train_loss != float('inf') else 0) * 100
+                    logger.info(f"  [BEST] NEW BEST TRAINING LOSS: {train_loss:.4f}")
+                    if improvement > 0:
+                        logger.info(f"  [BEST] Improved by {improvement:.2f}%")
+                    logger.info(f"{'-'*80}")
             
             # Check if interrupted before saving regular checkpoints
             if interrupted:
