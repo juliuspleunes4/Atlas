@@ -618,6 +618,9 @@ def main():
                 is_epoch_end=False,
             )
             logger.info(f"  [SAVED] Step checkpoint: {checkpoint_path}")
+            logger.info(f"  [SAVED]   Step: {metadata.step}, Epoch: {metadata.epoch}")
+            logger.info(f"  [SAVED]   Loss: {metadata.loss:.4f}, Perplexity: {metadata.perplexity:.2f}")
+            logger.info(f"  [SAVED]   Learning Rate: {metadata.learning_rate:.2e}")
             logger.info(f"{'-'*80}")
     
     try:

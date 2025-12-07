@@ -259,7 +259,10 @@ class Trainer:
                             is_best=False,
                             is_epoch_end=False,
                         )
-                        print(f"[AUTO-SAVE] Saved: {checkpoint_path}\n")
+                        print(f"[AUTO-SAVE] Saved: {checkpoint_path}")
+                        print(f"[AUTO-SAVE]   Step: {metadata.step}, Epoch: {metadata.epoch}")
+                        print(f"[AUTO-SAVE]   Loss: {metadata.loss:.4f}, Perplexity: {metadata.perplexity:.2f}")
+                        print(f"[AUTO-SAVE]   Learning Rate: {metadata.learning_rate:.2e}\n")
             
             # Log metrics
             if self.global_step > 0 and self.global_step % log_interval == 0:
