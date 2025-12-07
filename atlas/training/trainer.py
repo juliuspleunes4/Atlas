@@ -61,6 +61,8 @@ class Trainer:
         gradient_accumulation_steps: int = 1,
         max_grad_norm: Optional[float] = 1.0,
         device: str = 'cuda' if torch.cuda.is_available() else 'cpu',
+        checkpoint_manager: Optional[Any] = None,
+        auto_save_interval: int = 1000,
     ):
         """
         Initialize trainer.
@@ -72,6 +74,8 @@ class Trainer:
             gradient_accumulation_steps: Number of steps to accumulate gradients
             max_grad_norm: Maximum gradient norm for clipping (None to disable)
             device: Device to train on ('cuda' or 'cpu')
+            checkpoint_manager: Optional checkpoint manager for auto-saving
+            auto_save_interval: Save checkpoint every N steps (default 1000)
         """
         self.model = model.to(device)
         self.optimizer = optimizer
@@ -79,12 +83,15 @@ class Trainer:
         self.gradient_accumulation_steps = gradient_accumulation_steps
         self.max_grad_norm = max_grad_norm
         self.device = device
+        self.checkpoint_manager = checkpoint_manager
+        self.auto_save_interval = auto_save_interval
         
         # Training state
         self.global_step = 0
         self.accumulated_loss = 0.0
         self.tokens_processed = 0
         self.start_time = time.time()
+        self.current_epoch = 1  # Track current epoch for checkpoint metadata
         
     def train_step(
         self,
@@ -220,12 +227,39 @@ class Trainer:
             self.tokens_processed += batch_tokens
             num_batches += 1
             
+            # Check if this was the last accumulation step (global step was updated)
+            was_last_accumulation = accumulation_step == (self.gradient_accumulation_steps - 1)
+            
             # Update accumulation step
             accumulation_step = (accumulation_step + 1) % self.gradient_accumulation_steps
             
             # Call step callback if provided (for checkpointing, etc.)
-            if step_callback is not None and accumulation_step == 0:
+            # Only call after a full accumulation cycle (when global_step was incremented)
+            if step_callback is not None and was_last_accumulation:
                 step_callback(self, loss)
+            
+            # Auto-save checkpoint at intervals (built-in checkpointing)
+            if was_last_accumulation:
+                if self.checkpoint_manager is not None:
+                    if self.global_step % self.auto_save_interval == 0 and self.global_step > 0:
+                        from .checkpoint import CheckpointMetadata
+                        print(f"\n[AUTO-SAVE] Saving checkpoint at step {self.global_step}...")
+                        metadata = CheckpointMetadata(
+                            step=self.global_step,
+                            epoch=self.current_epoch,
+                            loss=loss,
+                            perplexity=compute_perplexity(torch.tensor(loss)).item(),
+                            learning_rate=self.optimizer.param_groups[0]['lr'],
+                        )
+                        checkpoint_path = self.checkpoint_manager.save_checkpoint(
+                            self.model,
+                            self.optimizer,
+                            metadata,
+                            scheduler=self.scheduler,
+                            is_best=False,
+                            is_epoch_end=False,
+                        )
+                        print(f"[AUTO-SAVE] Saved: {checkpoint_path}\n")
             
             # Log metrics
             if self.global_step > 0 and self.global_step % log_interval == 0:

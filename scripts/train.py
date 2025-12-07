@@ -512,7 +512,20 @@ def main():
             scheduler_type=config.training.scheduler_type,
         )
     
-    # Create trainer
+    # Initialize auto_save_interval (needed by trainer)
+    # Save every 100 global steps = 1600 batches (~4-5 minutes at current speed)
+    auto_save_interval = 100
+    
+    # Create checkpoint manager first (needed by trainer)
+    checkpoint_manager = CheckpointManager(
+        checkpoint_dir=args.output_dir,
+        model_name='atlas',
+        keep_best=True,
+        keep_last_n=config.training.keep_checkpoints,  # Step-based checkpoints
+        keep_last_epochs=5,  # Keep last 5 epoch checkpoints
+    )
+    
+    # Create trainer with built-in checkpoint manager
     trainer = Trainer(
         model=model,
         optimizer=optimizer,
@@ -520,6 +533,8 @@ def main():
         gradient_accumulation_steps=config.training.gradient_accumulation_steps,
         max_grad_norm=config.training.max_grad_norm,
         device=args.device,
+        checkpoint_manager=checkpoint_manager,
+        auto_save_interval=auto_save_interval,
     )
     
     # Set starting step if resuming
@@ -531,15 +546,6 @@ def main():
         import gc
         gc.set_threshold(700, 10, 10)  # More aggressive garbage collection
         logger.info("  Aggressive garbage collection enabled")
-    
-    # Create checkpoint manager
-    checkpoint_manager = CheckpointManager(
-        checkpoint_dir=args.output_dir,
-        model_name='atlas',
-        keep_best=True,
-        keep_last_n=config.training.keep_checkpoints,  # Step-based checkpoints
-        keep_last_epochs=5,  # Keep last 5 epoch checkpoints
-    )
     
     logger.info(f"  Optimizer: AdamW")
     logger.info(f"  Learning rate: {config.training.learning_rate}")
@@ -561,7 +567,7 @@ def main():
     
     # Auto-adjust save_interval if not explicitly set to aim for ~10 minute intervals
     # We'll refine this after the first few steps based on actual throughput
-    auto_save_interval = args.save_interval
+    # (auto_save_interval already initialized earlier before trainer creation)
     save_interval_adjusted = False
     
     # Training loop
@@ -592,7 +598,7 @@ def main():
     def checkpoint_callback(trainer_obj, loss):
         """Called after each global step to save checkpoints."""
         # Save step-based checkpoint at intervals
-        if trainer_obj.global_step % auto_save_interval == 0:
+        if trainer_obj.global_step % auto_save_interval == 0 and trainer_obj.global_step > 0:
             logger.info(f"\n{'-'*80}")
             logger.info(f"Saving checkpoint at step {trainer_obj.global_step}...")
             metadata = CheckpointMetadata(
@@ -617,6 +623,7 @@ def main():
     try:
         while trainer.global_step < max_steps and not interrupted:
             epoch += 1
+            trainer.current_epoch = epoch  # Update epoch in trainer for checkpoint metadata
             epoch_start_time = time.time()
             logger.info(f"\n{'='*80}")
             logger.info(f">>> EPOCH {epoch} | Step {trainer.global_step}/{max_steps}")

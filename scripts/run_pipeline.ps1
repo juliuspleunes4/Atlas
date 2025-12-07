@@ -312,6 +312,12 @@ if ($response -eq "n" -or $response -eq "N") {
 
 # Step 9: Start training
 Write-Step "Starting Training..."
+
+# Clear Python cache to ensure latest code is loaded
+Write-Info "Clearing Python cache..."
+Get-ChildItem -Path . -Filter "__pycache__" -Recurse -Directory -ErrorAction SilentlyContinue | Remove-Item -Recurse -Force -ErrorAction SilentlyContinue
+Get-ChildItem -Path . -Filter "*.pyc" -Recurse -File -ErrorAction SilentlyContinue | Remove-Item -Force -ErrorAction SilentlyContinue
+
 Write-Host @"
 
 ================================================================================
@@ -321,9 +327,9 @@ TRAINING STARTED
 "@ -ForegroundColor Green
 
 if ($resumeFlag) {
-    python scripts/train.py --config $configFile --train-data $processedDir $resumeFlag
+    python -B -W ignore::SyntaxWarning scripts/train.py --config $configFile --train-data $processedDir $resumeFlag
 } else {
-    python scripts/train.py --config $configFile --train-data $processedDir
+    python -B -W ignore::SyntaxWarning scripts/train.py --config $configFile --train-data $processedDir
 }
 
 # Check result
