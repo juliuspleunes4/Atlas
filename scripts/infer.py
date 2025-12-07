@@ -133,49 +133,55 @@ def load_model_and_tokenizer(checkpoint_path: str, tokenizer_name: str, device: 
         raise ValueError(f"Invalid checkpoint: missing 'model_state_dict'")
     
     # Initialize tokenizer
-    tokenizer = Tokenizer(tokenizer_name=tokenizer_name)
+    tokenizer = Tokenizer(encoding_name=tokenizer_name)
     print(f"Tokenizer: {tokenizer_name} (vocab_size={tokenizer.vocab_size})")
     
-    # Get model config from checkpoint metadata
-    if 'config' in checkpoint:
-        config = checkpoint['config']
-    else:
-        # Try to infer from state dict
-        state_dict = checkpoint['model_state_dict']
-        # Get vocab size from embedding weight
-        vocab_size = state_dict['embedding.token_embedding.weight'].shape[0]
-        max_seq_len = state_dict['embedding.positional_embedding.weight'].shape[0]
-        hidden_size = state_dict['embedding.token_embedding.weight'].shape[1]
-        
-        # Count layers
-        num_layers = sum(1 for k in state_dict.keys() if k.startswith('blocks.') and k.endswith('.ln1.weight'))
-        
-        # Get num_heads from attention weights
-        num_heads = state_dict['blocks.0.attention.qkv_proj.weight'].shape[0] // (3 * hidden_size) * hidden_size
-        num_heads = hidden_size // (state_dict['blocks.0.attention.qkv_proj.weight'].shape[0] // (3 * hidden_size))
-        
-        print(f"Inferred config from checkpoint:")
-        print(f"  vocab_size={vocab_size}, max_seq_len={max_seq_len}")
-        print(f"  hidden_size={hidden_size}, num_layers={num_layers}")
-        
-        # Create config dict
-        from atlas.config import ModelConfig
-        config = ModelConfig(
-            vocab_size=vocab_size,
-            max_seq_len=max_seq_len,
-            hidden_size=hidden_size,
-            num_layers=num_layers,
-            num_heads=num_heads,
-        )
+    # Get model config from checkpoint metadata or infer from state dict
+    state_dict = checkpoint['model_state_dict']
     
-    # Create model
-    if hasattr(config, '__dict__'):
-        model = AtlasLM(config)
-    else:
-        from atlas.config import ModelConfig
-        model = AtlasLM(ModelConfig(**config))
+    # Print checkpoint metadata if available
+    if 'metadata' in checkpoint:
+        meta = checkpoint['metadata']
+        print(f"Checkpoint info: step={meta.get('step')}, epoch={meta.get('epoch')}, loss={meta.get('loss', 0):.4f}")
     
-    # Load weights
+    # Infer config from state dict structure
+    token_emb_key = 'embeddings.token_embedding.embedding.weight'
+    pos_emb_key = 'embeddings.positional_embedding.embedding.weight'
+    
+    if token_emb_key not in state_dict:
+        raise ValueError(f"Cannot find '{token_emb_key}' in checkpoint")
+    
+    vocab_size = state_dict[token_emb_key].shape[0]
+    hidden_size = state_dict[token_emb_key].shape[1]
+    max_seq_len = state_dict[pos_emb_key].shape[0]
+    
+    # Count transformer layers
+    num_layers = sum(1 for k in state_dict.keys() if k.startswith('blocks.') and k.endswith('.ln1.weight'))
+    
+    # Infer num_heads from hidden_size (standard configurations)
+    num_heads = {
+        768: 12,   # GPT-2 small
+        1024: 16,  # GPT-2 medium
+        1280: 20,  # GPT-2 large
+        1600: 25,  # GPT-2 XL
+    }.get(hidden_size, hidden_size // 64)  # fallback: 64 dim per head
+    
+    print(f"Model config:")
+    print(f"  vocab_size={vocab_size}, max_seq_len={max_seq_len}")
+    print(f"  hidden_size={hidden_size}, num_layers={num_layers}, num_heads={num_heads}")
+    
+    # Create config
+    from atlas.config import ModelConfig
+    config = ModelConfig(
+        vocab_size=vocab_size,
+        max_seq_len=max_seq_len,
+        hidden_size=hidden_size,
+        num_layers=num_layers,
+        num_heads=num_heads,
+    )
+    
+    # Create and load model
+    model = AtlasLM(config)
     model.load_state_dict(checkpoint['model_state_dict'])
     model.to(device)
     model.eval()
@@ -194,7 +200,7 @@ def load_prompts_from_file(file_path: str) -> List[str]:
     return prompts
 
 
-def generate_interactive(generator: TextGenerator, config: GenerationConfig, show_prompt: bool):
+def generate_interactive(generator: TextGenerator, tokenizer, config: GenerationConfig, show_prompt: bool):
     """Interactive generation mode."""
     print("\n" + "="*80)
     print("Interactive Mode")
@@ -218,6 +224,7 @@ def generate_interactive(generator: TextGenerator, config: GenerationConfig, sho
                 # Generate
                 generated = generator.generate_from_prompt(
                     prompt=prompt,
+                    tokenizer=tokenizer,
                     config=config,
                 )
                 
@@ -239,6 +246,7 @@ def generate_interactive(generator: TextGenerator, config: GenerationConfig, sho
 
 def generate_batch(
     generator: TextGenerator,
+    tokenizer,
     prompts: List[str],
     config: GenerationConfig,
     show_prompt: bool,
@@ -254,6 +262,7 @@ def generate_batch(
         # Generate
         generated = generator.generate_from_prompt(
             prompt=prompt,
+            tokenizer=tokenizer,
             config=config,
         )
         
@@ -313,17 +322,18 @@ def main():
     print("="*80)
     
     # Create generator
-    generator = TextGenerator(model=model, tokenizer=tokenizer, device=args.device)
+    generator = TextGenerator(model=model, device=args.device)
     
     # Determine mode and generate
     if args.interactive:
-        generate_interactive(generator, config, args.show_prompt)
+        generate_interactive(generator, tokenizer, config, args.show_prompt)
     
     elif args.prompts_file:
         prompts = load_prompts_from_file(args.prompts_file)
         print(f"\nLoaded {len(prompts)} prompts from {args.prompts_file}\n")
         generate_batch(
             generator,
+            tokenizer,
             prompts,
             config,
             args.show_prompt,
@@ -334,6 +344,7 @@ def main():
     elif args.prompt:
         generate_batch(
             generator,
+            tokenizer,
             [args.prompt],
             config,
             args.show_prompt,
