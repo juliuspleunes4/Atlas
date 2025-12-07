@@ -46,6 +46,23 @@ Atlas is currently in early development. See [`docs/ROADMAP.md`](docs/ROADMAP.md
 
 **Total: 325 passing tests** ✨
 
+## 🏗️ Architecture
+
+Atlas implements a decoder-only transformer architecture (GPT-style) with the following flow:
+
+<div align="center">
+  <img src="assets/architecture-diagram.svg" alt="Atlas Architecture Diagram" width="600"/>
+</div>
+
+**Key Components:**
+- **Token & Positional Embeddings**: Convert input tokens to dense vectors with positional information
+- **Transformer Blocks**: Multi-head self-attention + feed-forward networks with residual connections
+- **Layer Normalization**: Pre-norm architecture for training stability
+- **Causal Masking**: Autoregressive generation (model only sees previous tokens)
+- **Language Model Head**: Projects hidden states back to vocabulary for next-token prediction
+
+For detailed architecture documentation, see [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md).
+
 ## ⚙️ Model Configurations
 
 Atlas provides multiple pre-configured model sizes optimized for different hardware capabilities:
