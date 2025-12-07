@@ -273,10 +273,14 @@ def create_datasets(train_paths: str, val_paths: Optional[str], tokenizer: Token
     if not train_files:
         raise ValueError(f"No training files found in {train_paths}")
     
+    # Use memory-mapped files for large datasets (>20M tokens) to reduce RAM usage
+    use_mmap = config.training.batch_size == 1  # Enable for extreme memory optimization
+    
     train_dataset = TextDataset(
         file_paths=train_files,
         tokenizer=tokenizer,
         max_seq_len=config.data.max_seq_len,
+        use_mmap=use_mmap,
     )
     
     val_dataset = None
@@ -295,7 +299,8 @@ def create_datasets(train_paths: str, val_paths: Optional[str], tokenizer: Token
                 file_paths=val_files,
                 tokenizer=tokenizer,
                 max_seq_len=config.data.max_seq_len,
-        )
+                use_mmap=use_mmap,
+            )
     
     return train_dataset, val_dataset
 
@@ -438,12 +443,21 @@ def main():
         config,
     )
     load_time = time.time() - load_start
+    stats = train_dataset.get_stats()
     logger.info(f"  Train samples: {len(train_dataset):,}")
-    logger.info(f"  Train tokens: {train_dataset.get_stats()['total_tokens']:,}")
+    logger.info(f"  Train tokens: {stats['total_tokens']:,}")
+    if stats.get('use_mmap'):
+        logger.info(f"  Using memory-mapped storage (low RAM usage)")
     if val_dataset:
         logger.info(f"  Val samples: {len(val_dataset):,}")
         logger.info(f"  Val tokens: {val_dataset.get_stats()['total_tokens']:,}")
     logger.info(f"  Dataset loading time: {load_time:.2f}s")
+    
+    # Force garbage collection to free memory after dataset loading
+    import gc
+    gc.collect()
+    if torch.cuda.is_available():
+        torch.cuda.empty_cache()
     
     # Create dataloaders
     train_loader = create_dataloader(

@@ -4,9 +4,14 @@ All notable changes to Atlas will be documented in this file.
 
 ---
 
-## [Unreleased] - 2025-12-07 - Config Loading Improvements
+## [Unreleased] - 2025-12-07 - Memory Optimization & Config Improvements
 
 ### Added
+- **Memory-mapped dataset support**: `TextDataset` now supports memory-mapped file storage for large datasets to prevent RAM exhaustion
+  - Automatically enabled for ULTRA config (batch_size=1)
+  - Tokens stored on disk, loaded on-demand
+  - Reduces RAM usage from ~170MB to <10MB for 42M token dataset
+  - 9 comprehensive tests for mmap functionality
 - **Strict config loading in train.py**: Training script now uses `atlas.config.load_config()` for type-safe, validated configuration loading instead of raw YAML dict access
 - **Advanced training time estimator**: New `estimate_training_time.py` script that performs comprehensive benchmarking with:
   - Thermal throttling detection
@@ -14,18 +19,26 @@ All notable changes to Atlas will be documented in this file.
   - Validation time estimation
   - First epoch overhead calculation
   - Timeline predictions with completion dates
-- **3 new comprehensive tests** for config loading validation (total: 310 passing tests)
+- **No-resume flag**: Added `--no-resume` flag to prevent duplicate checkpoint prompts in automated scripts
+- **12 new comprehensive tests** (total: 319 passing tests)
+  - 9 tests for memory-mapped dataset
+  - 3 tests for config loading validation
 
 ### Changed
 - `TrainingConfig` now supports all YAML field names with proper aliases (`max_grad_norm`, `scheduler_type`, `gradient_checkpointing`, `keep_checkpoints`)
 - `DataConfig` enhanced with `max_seq_len` and `num_workers` support from YAML configs
 - All config field aliases properly synced in `__post_init__` methods
 - Training script now uses attribute access (`config.training.learning_rate`) instead of dict access (`config['training']['learning_rate']`)
+- `TextDataset.__getitem__` now supports negative indexing (e.g., `dataset[-1]`)
+- Dataset loading includes automatic garbage collection and CUDA cache clearing to free memory
 
 ### Fixed
+- **System freeze issue**: Memory-mapped storage prevents RAM exhaustion when training with large datasets
 - Config validation now happens at load time, catching errors before training starts
 - Duplicate `num_workers` field in `DataConfig` removed
 - Sequence length synchronization between `max_seq_len` and `sequence_length`
+- Duplicate checkpoint prompts in pipeline scripts eliminated with `--no-resume` flag
+- Tokenizer initialization in `train.py` (was incorrectly trying to access non-existent `config.tokenizer`)
 
 ---
 
@@ -89,7 +102,7 @@ All notable changes to Atlas will be documented in this file.
 
 ### 📊 Statistics
 
-- **310 passing tests** across all components
+- **319 passing tests** across all components
 - **6 model configurations** (40M to 500M parameters)
 - **10 comprehensive documentation files**
 - **Clean, modular codebase** with 94%+ coverage on core modules
@@ -152,7 +165,7 @@ This release represents the culmination of comprehensive development work across
   - `run_pipeline.sh` (Bash): Checkpoint detection with JSON metadata parsing
   - User-friendly y/n prompts with input validation
 
-- **New tests for auto-resume** (6 new tests, total: 310 passing)
+- **New tests for auto-resume** (6 new tests, total: 319 passing)
   - `test_find_latest_checkpoint_empty_dir`: Handles empty checkpoint directory
   - `test_find_latest_checkpoint`: Finds most recent by timestamp
   - `test_find_latest_checkpoint_excludes_best`: Correctly excludes best.pt

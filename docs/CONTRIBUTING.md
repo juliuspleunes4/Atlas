@@ -303,7 +303,7 @@ When making changes:
    
    ## Testing
    - Added N new tests
-   - All 310+ tests passing
+   - All 319+ tests passing
    - Manual testing: [describe]
    
    ## Checklist

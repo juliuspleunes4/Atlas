@@ -4,7 +4,7 @@
 [![Python 3.8+](https://img.shields.io/badge/python-3.8+-blue.svg)](https://www.python.org/downloads/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
-[![Tests](https://img.shields.io/badge/tests-310%20passing-brightgreen.svg)](tests/)
+[![Tests](https://img.shields.io/badge/tests-319%20passing-brightgreen.svg)](tests/)
 
 **A from-scratch language model implementation with GGUF export.**
 
@@ -42,7 +42,7 @@ Atlas is currently in early development. See [`docs/ROADMAP.md`](docs/ROADMAP.md
 **Upcoming:**
 - Phase 9-10: Advanced features and optimization
 
-**Total: 310 passing tests** ✨
+**Total: 319 passing tests** ✨
 
 ## ⚙️ Model Configurations
 
