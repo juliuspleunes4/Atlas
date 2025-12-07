@@ -1,3 +1,5 @@
+<div align="center">
+
 # 🌍 Atlas
 
 [![Version](https://img.shields.io/badge/version-v1.2.0-blue.svg)](https://github.com/juliuspleunes4/Atlas/releases/tag/v1.2.0)
@@ -7,6 +9,8 @@
 [![Tests](https://img.shields.io/badge/tests-325%20passing-brightgreen.svg)](tests/)
 
 **A from-scratch language model implementation with GGUF export.**
+
+</div>
 
 Atlas is a complete pipeline for building, training, and deploying decoder-only transformer language models. The project focuses on clarity, modularity, and the ability to export trained models to GGUF format for efficient inference.
 
