@@ -50,14 +50,14 @@ Atlas is currently in early development. See [`docs/ROADMAP.md`](docs/ROADMAP.md
 
 Atlas provides multiple pre-configured model sizes optimized for different hardware capabilities:
 
-| Configuration | Parameters | Layers | Hidden Size | Heads | Sequence Length | Batch Size | VRAM Usage | Training Speed | Best For |
-|--------------|-----------|--------|-------------|-------|----------------|------------|------------|----------------|----------|
-| **TINY** | ~40M | 8 | 512 | 8 | 512 | 4 (×4 accum) | 4-6 GB | Fastest | Testing, debugging, low-end GPUs |
-| **SMALL** | ~124M | 12 | 768 | 12 | 1024 | 24 (×2 accum) | 6-8 GB | Fast | Quick experiments, prototyping |
-| **DEFAULT** | ~350M | 24 | 1024 | 16 | 1024 | 16 (×2 accum) | 12-14 GB | Medium | **Recommended** for most users |
-| **LARGE** | ~500M | 30 | 1280 | 20 | 1024 | 8 (×4 accum) | 14-15 GB | Slow | Maximum quality, high-end GPUs |
-| **XLARGE** | ~500M | 30 | 1280 | 20 | 1024 | 2 (×16 accum) | 8-10 GB | Slow | Max params with memory safety |
-| **ULTRA** | ~500M | 30 | 1280 | 20 | 256 | 1 (×64 accum) | 3-5 GB | Slowest | **Cool & Quiet** - Low GPU temp |
+| Config | Parameters | Layers | Hidden Size | Heads | Sequence Length | Batch Size | VRAM Usage | Best For |
+|--------------|-----------|--------|-------------|-------|----------------|------------|------------|----------|
+| **TINY** | ~40M | 8 | 512 | 8 | 512 | 4 (×4 accum) | 4-6 GB | Testing, debugging, low-end GPUs |
+| **SMALL** | ~124M | 12 | 768 | 12 | 1024 | 24 (×2 accum) | 6-8 GB | Quick experiments, prototyping |
+| **DEFAULT** | ~350M | 24 | 1024 | 16 | 1024 | 16 (×2 accum) | 12-14 GB | **Recommended** for most users |
+| **LARGE** | ~500M | 30 | 1280 | 20 | 1024 | 8 (×4 accum) | 14-15 GB | Maximum quality, high-end GPUs |
+| **XLARGE** | ~500M | 30 | 1280 | 20 | 1024 | 2 (×16 accum) | 8-10 GB | Max params with memory safety |
+| **ULTRA** | ~500M | 30 | 1280 | 20 | 256 | 1 (×64 accum) | 3-5 GB | **Cool & Quiet** - Low GPU temp |
 
 **Configuration Details:**
 
